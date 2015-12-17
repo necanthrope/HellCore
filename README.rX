@@ -1,0 +1,267 @@
+This file merges information from the various README.r[5-8] notes
+shipped with Ben Jackson and Jay Carlson's "rogue" server patches.
+The information below didn't fit well into the changelog format.
+
+From README.r5:
+
+1.8.0r5 is a collection of unofficial patches to Erik Ostrom's
+LambdaMOO 1.8.0p6 server release.  They're primarily bug fixes and
+speedups.  For logistical reasons they're packaged as a tar file
+rather than as a collection of diffs.
+
+It's difficult to measure MOO server performance.  All we can say is
+that some plausible synthetic benchmarks are now two to four times
+faster.  Users have noted that production systems running this code
+feel much more responsive at computationally expensive tasks.
+
+[...]
+
+All files were run through GNU indent with settings given in
+.indent.pro in an attempt to normalize coding style.
+
+code_gen.c:
+
+Fixed bizarre bug where uninitialized memory was accessed; usually
+multiplied by zero immediately, so nobody ever noticed.
+
+eval_env.c, db_io.c, objects.c, utils.c:
+
+Type identifiers (TYPE_STR et al) now contain a bit flag indicating
+whether additional work needs to be done when a Var of their type is
+freed.  This allows free_var to run inline without a case statement
+when "simple" Vars are freed.  Code to translate between the internal
+TYPE_STR and the previous external representation added.
+
+db_verbs.c, db_objects.c:
+
+(This part is primarily Jay's fault, so we'll let him talk about it
+using the first person.)
+
+The verb lookup cache.  Traditionally, the server has spent large
+amounts of time searching for what verbcode to run.  MOO verbs can
+have aliases ($object_utils:descendents/descendants), incomplete
+specification ($room:l*ook), and command-line verbs distinguished by
+args...and verb definition order matters during lookup!  These
+features ruled out the naive speedup of just dumping all verbdefs in a
+hash table per object.
+
+I decided not to work too hard on improving the performance of command
+line verb lookups.  Any solution that addressed them looked to be many
+times more complex than just fixing verbs calling verbs
+(db_find_callable_verb), and the later appeared more significant to
+overall performance.
+
+Originally I built a 7 element per object table to cache lookups but
+this significantly inflated the server size relative to the
+performance increase.  If you're interested in this, it's in the
+moo-cows archive as one of the steak patches.
+
+My current solution to lookup performance is to build a global hash
+table mapping
+
+   (hash(object_key x target_verbname), object_key, target_verbname)
+        => (verbdef, handle)
+
+used only for callable verb lookups.  
+
+Any action on the db that could affect the validity of this table
+clears the whole table by calling
+db_priv_affected_callable_verb_lookup().  Here's a list:
+
+  recycle()
+  renumber()
+  chparent(): in some circumstances
+  add_verb()
+  delete_verb()
+  set_verb_info(): name changes, flag changes
+  set_verb_args()
+
+Since a good number of objects don't have verbs on them (inheriting
+all behavior from parents) I decided to use "first parent with verbs"
+as the object_key.  This means that all those kids of $exit don't need
+to have separate table entries for :invoke or whatever.  All kids of a
+player class get a single entry for :tell unless the player has verbs
+on emself.  (Sadly, on LambdaMOO, the lag reduction feature object
+places a trivial :tell on anyone using it.  Since the verb is
+immediately at hand the lookup is short but unavoidable for every
+player using it.)
+
+Since I use "first parent with verbs" as object_key, chparent() does
+not need to clear the table that often.  If the object has no verbs,
+it can't be mentioned in the table directly; however, if it has
+children it could indirectly affect lookup of its kids that do have
+verbs.  Transient objects going through the usual
+$recycler:_create()/$recycler:_recycle() life cycle avoid both of
+these problems and in this release no longer trigger a flush.
+
+For this release, Ben added negative caching---failed verb lookups are
+stored in the table as well.
+
+The table itself is implemented as a fixed number of hash chains.  The
+compiled-in default is 7507 (DEFAULT_VC_SIZE in db_verbs.c).
+Statistics on occupancy are available through two new wiz-only
+primitives.  log_cache_stats() dumps formatted info into the server
+log; verb_cache_stats() returns a list of the form:
+
+  {hits, negative_hits, misses, table_clears, histogram}
+
+where histogram is a 17 element list.  histogram[1] is the number of
+chains with length 0; histogram[2] is the number of chains with length
+1 and so on up to histogram[17] which counts the number of chains with
+length of 16 or greater.
+
+hits, negative_hits, misses, and table_clears are counters only zeroed
+at server start.  The histogram is a snapshot of current cache
+condition.  If you're running a really busy server you can overflow
+the hits counter in a few weeks; your server won't crash but values
+reported by these functions will be wrong.  Yes, LambdaMOO executes
+*billions* of verbs in a typical run.
+
+If you start fretting about how much memory the lookup table is using,
+write a continuously running verb that forces one of the table clear
+conditions.
+
+extensions.c, db_tune.h:
+
+The functions in extensions.c that provide verb cache stats need to
+talk to the db layer's internals in order to gather information, but
+they aren't part of the db layer proper.  db_tune.h was invented as a
+middle ground between db.h and db_private.h for source files that
+needed access to implementation-specific interfaces provided by the db
+layer.
+
+Comments (and suggestions on a better name!) on this are solicited.
+
+decompile.c, program.c:
+
+When errors are thrown, the line number of the error is included in
+the traceback information.  Mapping between bytecode program counter
+and line number is expensive, so each Program now maintains a single
+pc->lineno cache entry---hopefully most programs that fail multiple
+times usually fail on the same line.
+
+eval_env.c, execute.c:
+
+To avoid calling malloc()/free() as often, the server now keeps a
+central pool of rt_stacks and rt_envs of given sizes.  They revert to
+malloc()/free() for large requests.
+
+execute.c:
+
+General optimization; Ben can write more extensively about this.  One of
+the more significant is that OP_IMM followed by OP_POP is "peephole
+optimized"; this makes verb comments like
+
+  "$string_utils:from_list(l, [, separator])";
+  "Return a string etc";
+  do_some_work();
+  "and do some more work";
+  do_more_work();
+
+much cheaper.
+
+An important memory leak involving failed property lookups was closed.
+
+execute.c, options.h
+
+Because very few sites actually use protected builtin properties and
+using them is a very substantial performance hit, a new options.h
+define, IGNORE_PROP_PROTECTED, allows them to be disabled at
+compile-time.  This is the default.
+
+functions.c, server.c:
+
+Doing property lookups per builtin function call to determine whether
+the function needs the $server_options.protect_foo treatment is
+extremely expensive.  A protectedness flag was directly added to the
+builtin function struct; the value of these flags are loaded from the
+db at startup time, or whenever the new builtin function
+load_server_options() is called.
+
+list.c:
+
+There's now a canonical empty list.  
+
+The regexp pattern cache wasn't storing the case_matters flag, causing
+many patterns to be impossible to find in the cache.
+
+decode_binary() was broken on systems where char is signed by default.
+
+doinsert reallocs lists with refcount 1 when appending rather than
+calling var_ref/free_var on all the elements.  (The general case could
+be sped up with memcpy as well.)
+
+my-types.h:
+
+sys/time.h may be necessary for FD_ZERO et al definitions.
+
+parse_cmd.c, storage.h:
+
+parse_into_words was incorrectly allocating an array of (char *) as
+M_STRING.  This caused a million unaligned memory access warnings on
+the Alpha.  Created a new M_STRING_PTRS allocation class for this.
+
+pattern.c:
+
+fastmap was allocated with mymalloc() but freed with the normal
+free().  Fixed.
+
+ref_count.c:
+
+Refcounts are now allocated as part of objects that can be
+addref()'d.  This allows macros to manipulate those counts and makes a
+request for the current refcount of an object much cheaper.  This
+completely replaces the old hash table implementation.
+
+storage.c:
+
+There's now a canonical empty string.
+
+myrealloc(), the mymalloc/myfree analog of realloc() is now available.
+
+As a result of the changes, the memory debugging code is no longer
+available.  Also, since we now hold pointers to only the interior of
+some allocated objects, tools such as Purify will claim a million
+possible memory leaks.
+
+tasks.c:
+
+If a forked task was killed before it ever started, it leaked some
+memory.  Fixed.
+
+utils.c:
+
+var_refcount(Var v) added.  Returns the refcount of any Var.
+
+From README.r6:
+
+The two big changes in r6 over r5 are:
+
+  o  Bytecode optimizations to try to modify lists in-place whenever
+possible.  List manipulation and mutation should be orders of
+magnitude faster in some cases.
+
+  o  String "interning" during load; initially, there will be one and
+only one in-memory copy of each identical string.  (In JHCore that
+means we only allocate memory for "do" once...)
+
+From README.r7:
+
+r7 fixes BYTECODE_REDUCE_REF.  It's now safe to turn on.
+[This turned out to be false.]
+
+The default input and output buffer sizes in options.h are now 64k.
+
+From README.r8:
+
+r8 adds more fixes to BYTECODE_REDUCE_REF.  It's now safe to turn on.
+However, suspended tasks are a problem for switchover.  From options.h:
+
+ * This option affects the length of certain bytecode sequences.
+ * Suspended tasks in a database from a server built with this option
+ * are not guaranteed to work with a server built without this option,
+ * and vice versa.  It is safe to flip this switch only if there are
+ * no suspended tasks in the database you are loading.  (It might work
+ * anyway, but hey, it's your database.)  This restriction will be
+ * lifted in a future version of the server software.  Consider this
+ * option as being BETA QUALITY until then.
