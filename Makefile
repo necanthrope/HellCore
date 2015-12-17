@@ -115,7 +115,7 @@ y.tab.h: parser.y
 	$(YACC) $(YFLAGS) parser.y
 
 keywords.c: keywords.gperf parser.o
-	./gperf --ignore-case -aCptT -k1,3,$$ keywords.gperf \
+	gperf --ignore-case -aCptT -k1,3,$$ keywords.gperf \
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
 
