@@ -20,7 +20,7 @@ YACC = bison -y
 
 # CFLAGS = -g
 # If you're using GCC, you may prefer:
-CFLAGS = -O3
+CFLAGS = -O2 -finline-functions
 #
 # If you're not using GCC, and your compiler doesn't understand the
 # inline keyword, use the following.  (This will be fixed in autoconf2
