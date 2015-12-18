@@ -1,0 +1,454 @@
+diff -u MOO-1.8.1.utf8/list.c MOO-1.8.1.utf8-g2/list.c
+--- MOO-1.8.1.utf8/list.c	2004-03-06 22:15:58.812667080 +0000
++++ MOO-1.8.1.utf8-g2/list.c	2004-03-06 22:16:08.238234176 +0000
+@@ -350,6 +350,30 @@
+     return ans;
+ }
+ 
++char *
++strsetoctets(const char *base, const char *value, int from, int to)
++{
++	int index, offset = 0;
++	int val_len = strlen(value), base_len = strlen(base);
++	int lenleft = (from > 1) ? from - 1 : 0;
++	int lenmiddle = val_len;
++	int lenright = (base_len > to) ? base_len - to : 0;
++	int newsize = lenleft + lenmiddle + lenright;
++
++	char *s;
++
++	s = mymalloc(sizeof(char) * (newsize + 1), M_STRING);
++
++	for (index = 0; index < lenleft; index++)
++		s[offset++] = base[index];
++	for (index = 0; index < lenmiddle; index++)
++		s[offset++] = value[index];
++	for (index = 0; index < lenright; index++)
++		s[offset++] = base[index + to];
++	s[offset] = '\0';
++	return s;
++}
++
+ Var
+ substr(Var str, int lower, int upper)
+ {
+@@ -365,6 +389,24 @@
+     return r;
+ }
+ 
++char *
++stroctets(const char *str, int from, int to)
++{
++	char *s;
++	if (from > to || from > strlen(str) || from < 1)
++		s = str_dup("");
++	else {
++		int loop, index = 0;
++		s = mymalloc(to - from + 2, M_STRING);
++
++		for (loop = from - 1; loop < to; loop++)
++			s[index++] = str[loop];
++		s[index] = '\0';
++	}
++	
++	return s;
++}
++
+ Var
+ strget(Var str, Var i)
+ {
+@@ -402,6 +444,99 @@
+ }
+ 
+ static package
++bf_octets(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var r;
++	
++	r.type = TYPE_INT;
++	r.v.num = strlen(arglist.v.list[1].v.str);
++	free_var(arglist);
++	return make_var_pack(r);
++}
++
++static package
++bf_getoctets(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var base = arglist.v.list[1], rv;
++	int to, from = arglist.v.list[2].v.num;
++	
++	rv.type = TYPE_STR;
++	
++	if (arglist.v.list[0].v.num > 2)
++		to = arglist.v.list[3].v.num;
++	else
++		to = strlen(base.v.str);
++	
++	if (from < 1) {
++		free_var(arglist);
++		return make_error_pack(E_RANGE);
++	} else
++		rv.v.str = stroctets(base.v.str, from, to);
++		
++	free_var(arglist);
++	return make_var_pack(rv);
++}
++
++static package
++bf_getoctet(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var base = arglist.v.list[1], rv;
++	int i = arglist.v.list[2].v.num;
++	
++	rv.type = TYPE_STR;
++	
++	if (i < 1 || i > strlen(base.v.str)) {
++		free_var(arglist);
++		return make_error_pack(E_RANGE);
++	} else
++		rv.v.str = stroctets(base.v.str, i, i);
++		
++	free_var(arglist);
++	return make_var_pack(rv);
++}
++
++static package
++bf_setoctets(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var base = arglist.v.list[1], value = arglist.v.list[2], rv;
++	int from = arglist.v.list[3].v.num, to;
++	
++	rv.type = TYPE_STR;
++	
++	if (arglist.v.list[0].v.num > 3)
++		to = arglist.v.list[4].v.num;
++	else
++		to = strlen(base.v.str);
++	
++	if (from < 1 || from > strlen(base.v.str) + 1) {
++		free_var(arglist);
++		return make_error_pack(E_RANGE);
++	} else
++		rv.v.str = strsetoctets(base.v.str, value.v.str, from, to);
++	
++	free_var(arglist);
++	return make_var_pack(rv);
++}
++
++static package
++bf_setoctet(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var base = arglist.v.list[1], value = arglist.v.list[2], rv;
++	int i = arglist.v.list[3].v.num;
++	
++	rv.type = TYPE_STR;
++	
++	if (i < 1 || i > strlen(base.v.str) + 1) {
++		free_var(arglist);
++		return make_error_pack(E_RANGE);
++	} else
++		rv.v.str = strsetoctets(base.v.str, value.v.str, i, i);
++	
++	free_var(arglist);
++	return make_var_pack(rv);
++}
++
++static package
+ bf_setadd(Var arglist, Byte next, void *vdata, Objid progr)
+ {
+     Var r;
+@@ -1068,6 +1203,94 @@
+ 	return make_error_pack(E_INVARG);
+ }
+ 
++/* Character manipulation/conversion */
++
++static package
++bf_ucs4(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var v;
++
++    if (0 == arglist.v.list[1].v.str[0]) {
++		/* empty string */
++		free_var(arglist);
++		return make_raise_pack(E_INVARG, "Empty String", zero);
++	}
++	v.type = TYPE_INT;
++	v.v.num = utf8_to_ucs4((char *) arglist.v.list[1].v.str);
++	free_var(arglist);
++	if (v.v.num < 0)
++		return make_error_pack(E_INVARG);
++	return make_var_pack(v);
++}
++
++static package
++bf_asc(Var arglist, Byte next, void *vdata, Objid progr)
++{	// bf_ucs4, but raises E_INVARG if over 255
++	Var v;
++
++    if (0 == arglist.v.list[1].v.str[0]) {
++		/* empty string */
++		free_var(arglist);
++		return make_raise_pack(E_INVARG, "Empty String", zero);
++	}
++	v.type = TYPE_INT;
++	v.v.num = utf8_to_ucs4((char *) arglist.v.list[1].v.str);
++	free_var(arglist);
++	if (v.v.num < 0 || v.v.num > 255)
++		return make_error_pack(E_INVARG);
++	return make_var_pack(v);
++}
++
++static package
++bf_octet_int(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var v;
++
++    if (0 == arglist.v.list[1].v.str[0]) {
++		/* empty string */
++		free_var(arglist);
++		return make_raise_pack(E_INVARG, "Empty String", zero);
++	}
++	v.type = TYPE_INT;
++    v.v.num = (unsigned char) arglist.v.list[1].v.str[0];
++    free_var(arglist);
++    return make_var_pack(v);
++}
++
++static package
++bf_chr(Var arglist, Byte next, void *vdata, Objid progr)
++{
++	Var v;
++
++	if (0 > arglist.v.list[1].v.num) {
++		free_var(arglist);
++		return make_error_pack(E_RANGE);
++	}
++	v.type = TYPE_STR;
++	v.v.str = ucs4_to_utf8(arglist.v.list[1].v.num);
++	free_var(arglist);
++	return make_var_pack(v);
++}
++
++static package
++bf_octet_str(Var arglist, Byte next, void *vdata, Objid progr)
++{
++    Var v;
++
++    if (arglist.v.list[1].v.num < 1 ||
++        arglist.v.list[1].v.num > 0xFF) {
++	/* not an integer in valid ASCII range */
++        free_var(arglist);
++        return make_error_pack(E_INVARG);
++    }
++    v.type = TYPE_STR;
++    v.v.str = (char *) mymalloc(2, M_STRING);
++    ((char *) v.v.str)[0] = arglist.v.list[1].v.num;
++    ((char *) v.v.str)[1] = 0;
++    free_var(arglist);
++    return make_var_pack(v);
++}
++
+ void
+ register_list(void)
+ {
+@@ -1078,6 +1301,11 @@
+     register_function("decode_binary", 1, 2, bf_decode_binary,
+ 		      TYPE_STR, TYPE_ANY);
+     register_function("encode_binary", 0, -1, bf_encode_binary);
++    register_function("octets", 1, 1, bf_octets, TYPE_STR);
++    register_function("getoctets", 2, 3, bf_getoctets, TYPE_STR, TYPE_INT, TYPE_INT);
++    register_function("getoctet", 2, 2, bf_getoctet, TYPE_STR, TYPE_INT);
++    register_function("setoctets", 3, 4, bf_setoctets, TYPE_STR, TYPE_STR, TYPE_INT, TYPE_INT);
++    register_function("setoctet", 3, 3, bf_setoctet, TYPE_STR, TYPE_STR, TYPE_INT);
+     /* list */
+     register_function("length", 1, 1, bf_length, TYPE_ANY);
+     register_function("setadd", 2, 2, bf_setadd, TYPE_LIST, TYPE_ANY);
+@@ -1105,6 +1333,13 @@
+     register_function("strcmp", 2, 2, bf_strcmp, TYPE_STR, TYPE_STR);
+     register_function("strsub", 3, 4, bf_strsub,
+ 		      TYPE_STR, TYPE_STR, TYPE_STR, TYPE_ANY);
++			  
++	/* character */
++	register_function("ucs4", 1, 1, bf_ucs4, TYPE_STR);
++	register_function("asc", 1, 1, bf_asc, TYPE_STR);
++	register_function("octet_int", 1, 1, bf_octet_int, TYPE_STR);
++	register_function("chr", 1, 1, bf_chr, TYPE_INT);
++	register_function("octet_str", 1, 1, bf_octet_str, TYPE_INT);
+ }
+ 
+ 
+diff -u MOO-1.8.1.utf8/net_multi.c MOO-1.8.1.utf8-g2/net_multi.c
+--- MOO-1.8.1.utf8/net_multi.c	2004-03-06 22:15:58.815666624 +0000
++++ MOO-1.8.1.utf8-g2/net_multi.c	2004-03-06 22:19:54.017910448 +0000
+@@ -264,23 +264,21 @@
+     char *ptr, *end;
+ 
+     if ((count = read(h->rfd, buffer, sizeof(buffer))) > 0) {
+-	for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {
+-	    unsigned char c = *ptr;
+-
+-	    if (!h->binary && c == '\n') 
+-	    {
+-		server_receive_line(h->shandle, reset_stream(s));
+-	    }
+-	    else if (c >= ' ') /* We don't want people typing control characters. */
+-	    {
+-		stream_add_char(s, c);
+-	    }
+-	}
+-
+-	if (h->binary)
+-	{
++	if (h->binary) {
++	    stream_add_string(s, raw_bytes_to_binary(buffer, count));
+ 	    server_receive_line(h->shandle, reset_stream(s));
+ 	    h->last_input_was_CR = 0;
++	} else {
++	    for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {
++		unsigned char c = *ptr;
++
++		if (c >= ' ' || c == '\t')
++		    stream_add_char(s, c);
++		else if (c == '\r' || (c == '\n' && !h->last_input_was_CR))
++		    server_receive_line(h->shandle, reset_stream(s));
++
++		h->last_input_was_CR = (c == '\r');
++	    }
+ 	}
+ 	return 1;
+     } else
+Common subdirectories: MOO-1.8.1.utf8/pgperf and MOO-1.8.1.utf8-g2/pgperf
+diff -u MOO-1.8.1.utf8/utf8.c MOO-1.8.1.utf8-g2/utf8.c
+--- MOO-1.8.1.utf8/utf8.c	2004-03-06 22:15:58.822665560 +0000
++++ MOO-1.8.1.utf8-g2/utf8.c	2004-03-06 22:19:10.134581728 +0000
+@@ -31,8 +31,6 @@
+ #include "utf8.h"
+ #include "storage.h"
+ 
+-static int utf8_numbytes(char c);
+-
+ size_t utf8_strlen(const char* str)
+ {
+     char *p = (char*)str;
+@@ -385,7 +383,7 @@
+     return 0;
+ }
+ 
+-static int utf8_numbytes(char c)
++int utf8_numbytes(char c)
+ {
+     if (0 == (0x80 & c))
+     {
+@@ -458,3 +456,79 @@
+ 
+     return nFakeCnt;
+ }
++
++int32 utf8_to_ucs4(const char *cs)
++{
++	int csl = strlen(cs);
++
++	if(cs[0] & 0200) {	// multi-byte seq
++		if((cs[0] & 0340) == 0300)			// 110?????
++			return (csl > 1)
++			? (((int32) cs[0] & 037) <<  6)
++			+ (((int32) cs[1] & 077)      ) : -1;
++		else if ((cs[0] & 0360) == 0340)	// 1110????
++			return (csl > 2)
++			? (((int32) cs[0] & 017) << 12)
++			+ (((int32) cs[1] & 077) <<  6)
++			+ (((int32) cs[2] & 077)      ) : -1;
++		else if ((cs[0] & 0370) == 0360)	// 11110???
++			return (csl > 3)
++			? (((int32) cs[0] &  07) << 18)
++			+ (((int32) cs[1] & 077) << 12)
++			+ (((int32) cs[2] & 077) <<  6)
++			+ (((int32) cs[3] & 077)      ) : -1;
++		else if ((cs[0] & 0374) == 0370)	// 111110??
++			return (csl > 4)
++			? (((int32) cs[0] &  03) << 24)
++			+ (((int32) cs[1] & 077) << 18)
++			+ (((int32) cs[2] & 077) << 12)
++			+ (((int32) cs[3] & 077) <<  6)
++			+ (((int32) cs[4] & 077)      ) : -1;
++		else if ((cs[0] & 0376) == 0374)	// 1111110?
++			return (csl > 5)
++			? (((int32) cs[0] &  01) << 30)
++			+ (((int32) cs[1] & 077) << 24)
++			+ (((int32) cs[2] & 077) << 18)
++			+ (((int32) cs[3] & 077) << 12)
++			+ (((int32) cs[4] & 077) <<  6)
++			+ (((int32) cs[5] & 077)      ) : -1;
++		else
++			return -1;
++	} else
++		return (int32) cs[0];
++}
++
++char * ucs4_to_utf8(int32 uc)
++{
++    char *rs, *rv;
++
++    rv = rs = str_dup("xxxxxx");
++
++	if      (uc >= 0x4000000)	// 31 bits
++		*rs++ = (char) (((uc & 0x40000000) >> 30) + 0xfc);
++	else if (uc >=  0x200000)	// 26 bits
++		*rs++ = (char) (((uc &  0x3000000) >> 24) + 0xf8);
++	else if (uc >=   0x10000)	// 21 bits
++		*rs++ = (char) (((uc &   0x1c0000) >> 18) + 0xf0);
++	else if (uc >=     0x800)	// 16 bits
++		*rs++ = (char) (((uc &     0xf000) >> 12) + 0xe0);
++	else if (uc >=      0x80)	// 11 bits
++		*rs++ = (char) (((uc &      0x7c0) >>  6) + 0xc0);
++	else
++		*rs++ = (char) uc;
++
++	if (uc > 0x3ffffff)
++		*rs++ = (char) (((uc & 0x3f000000) >> 24) + 0x80);
++	if (uc >  0x1fffff)
++		*rs++ = (char) (((uc &   0xfc0000) >> 18) + 0x80);
++	if (uc >    0xffff)
++		*rs++ = (char) (((uc &    0x3f000) >> 12) + 0x80);
++	if (uc >     0x7ff)
++		*rs++ = (char) (((uc &      0xfc0) >>  6) + 0x80);
++	if (uc >      0x7f)
++		*rs++ = (char) (((uc &       0x3f)      ) + 0x80);
++
++    *rs = '\0';
++
++    return rv;
++}
+diff -u MOO-1.8.1.utf8/utf8.h MOO-1.8.1.utf8-g2/utf8.h
+--- MOO-1.8.1.utf8/utf8.h	2004-03-06 22:15:58.825665104 +0000
++++ MOO-1.8.1.utf8-g2/utf8.h	2004-03-06 22:19:04.640416968 +0000
+@@ -50,7 +50,16 @@
+ extern const char* utf8_copyandset(const char* lhs, int32 index, const char* rhs);
+ extern const char* utf8_strrangeset(const char* lhs, int32 from, int32 to, const char* rhs);
+ 
++/* Return the number of bytes in a UTF-8 sequence from the first character
++ */
++extern int utf8_numbytes(char c);
++
+ /* Return a UTF-8 based index of the character where nRealIdx lies,
+  * in the string pStr.
+  */
+ extern int utf8_convert_index(int nRealIdx, const char* pStr);
++
++/* Convert between UCS-4 numbers and UTF-8 character arrays.
++ */
++extern int32 utf8_to_ucs4(const char *cs);
++extern char * ucs4_to_utf8(int32 uc);
+diff -u MOO-1.8.1.utf8/version.c MOO-1.8.1.utf8-g2/version.c
+--- MOO-1.8.1.utf8/version.c	2004-03-06 22:15:58.826664952 +0000
++++ MOO-1.8.1.utf8-g2/version.c	2004-03-06 22:17:53.935165800 +0000
+@@ -40,7 +40,7 @@
+ #include "config.h"
+ #include "version.h"
+ 
+-const char *server_version = "1.8.1u4";
++const char *server_version = "1.8.1u4g2";
+ 
+ int
+ check_version(DB_Version version)
