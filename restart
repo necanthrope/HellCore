@@ -41,7 +41,7 @@ if [ -f $1.log ]; then
 fi
 
 echo `date`: RESTARTED >> $1.log
-echo "Restaring with $1.db, dumping to $1.db.new and logging to $1.log"
+echo "Restarting with $1.db, dumping to $1.db.new and logging to $1.log"
 nohup ./moo $1.db $1.db.new $2 >> $1.log 2>&1 &
 
 if [ -f $1.log.old ]; then
