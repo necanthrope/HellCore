@@ -22,6 +22,10 @@ or just:
 
 You should be able to login with 'connect Wizard', then change your password.
 
+### Building
+
+Simply change to the src directory, and type 'make'.  This should build the moo binary.
+
 ### USE AT YOUR OWN RISK. I DENY RESPONSIBILITY FOR:
 * Spontaneous hairy nose
 * Micropenis
