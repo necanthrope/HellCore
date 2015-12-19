@@ -24,6 +24,11 @@ You should be able to login with 'connect Wizard', then change your password.
 
 ### Building
 
+FOR UNICODE BRANCH ONLY:
+
+run this commands before running make:
+> yacc -d parser.y
+
 Simply change to the src directory, and type 'make'.  This should build the moo binary.
 
 ### USE AT YOUR OWN RISK. I DENY RESPONSIBILITY FOR:
