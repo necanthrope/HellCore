@@ -40,7 +40,7 @@
 #include "config.h"
 #include "version.h"
 
-const char *server_version = "1.10.4";
+const char *server_version = "1.10.4u1";
 
 int
 check_version(DB_Version version)
@@ -48,4 +48,4 @@ check_version(DB_Version version)
     return version < Num_DB_Versions;
 }
 
-char rcsid_version[] = "$Id: version.c,v 1.11 2010/05/16 02:41:03 blacklite Exp $";
+char rcsid_version[] = "$Id: version.c,v 1.12 2010/05/16 02:41:03 blacklite necanthrope Exp $";

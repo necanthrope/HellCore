@@ -264,22 +264,24 @@ pull_input(nhandle * h)
     char *ptr, *end;
 
     if ((count = read(h->rfd, buffer, sizeof(buffer))) > 0) {
-	if (h->binary) {
-	    stream_add_string(s, raw_bytes_to_binary(buffer, count));
-	    server_receive_line(h->shandle, reset_stream(s));
-	    h->last_input_was_CR = 0;
-	} else {
-	    for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {
-		unsigned char c = *ptr;
+for (ptr = buffer, end = buffer + count; ptr < end; ptr++) {                        
+    unsigned char c = *ptr; 
 
-		if (isgraph(c) || c == ' ' || c == '\t')
-		    stream_add_char(s, c);
-		else if (c == '\r' || (c == '\n' && !h->last_input_was_CR))
-		    server_receive_line(h->shandle, reset_stream(s));
+if (!h->binary && c == '\n')                                                    
+   {
+ server_receive_line(h->shandle, reset_stream(s));
+   }
+   else if (c >= ' ') /* We don't want people typing control characters. */
+   {
+ stream_add_char(s, c);
+   }
+}
 
-		h->last_input_was_CR = (c == '\r');
-	    }
-	}
+  if (h->binary)
+  {
+      server_receive_line(h->shandle, reset_stream(s));
+      h->last_input_was_CR = 0;
+ 	}
 	return 1;
     } else
 	return (count == 0 && !proto.believe_eof)
