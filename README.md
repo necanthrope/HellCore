@@ -27,7 +27,8 @@ You should be able to login with 'connect Wizard', then change your password.
 FOR UNICODE BRANCH ONLY:
 
 run this commands before running make:
-> yacc -d parser.y
+> gperf -aCIptT -k1,3,$ keywords.gperf | sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' > keywords.c
+> bison -dy parser.y
 
 Simply change to the src directory, and type 'make'.  This should build the moo binary.
 
