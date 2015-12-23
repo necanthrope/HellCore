@@ -13,7 +13,9 @@ stuff, I more than likely left references to useless/deleted props/objects all
 over the place.
 
 To start it, you will need to run something like this:
+
 > ./moo -l moo.log hellcore.db hell.db.test 7777
+
 > (./moo -l <logfile> <original DB> <new DB> <port>)
 
 or just:
