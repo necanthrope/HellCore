@@ -14,9 +14,7 @@ over the place.
 
 To start it, you will need to run something like this:
 
-> ./moo -l moo.log hellcore.db hell.db.test 7777
-
-> (./moo -l <logfile> <original DB> <new DB> <port>)
+> ./moo -l moo.log hellcore.db hell.db.test 7777 > (./moo -l <logfile> <original DB> <new DB> <port>)
 
 or just:
 
@@ -30,6 +28,7 @@ FOR UNICODE BRANCH ONLY:
 
 run this commands before running make:
 > gperf -aCIptT -k1,3,$ keywords.gperf | sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' > keywords.c
+
 > bison -dy parser.y
 
 Simply change to the src directory, and type 'make'.  This should build the moo binary.
