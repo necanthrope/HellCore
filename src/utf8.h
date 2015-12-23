@@ -50,7 +50,17 @@ extern const char* utf8_substr(const char* str, int32 lower, int32 upper);
 extern const char* utf8_copyandset(const char* lhs, int32 index, const char* rhs);
 extern const char* utf8_strrangeset(const char* lhs, int32 from, int32 to, const char* rhs);
 
+/* Return the number of bytes in a UTF-8 sequence from the first character
+ */
+extern int utf8_numbytes(char c);
+
 /* Return a UTF-8 based index of the character where nRealIdx lies,
  * in the string pStr.
  */
 extern int utf8_convert_index(int nRealIdx, const char* pStr);
+
+/* Convert between UCS-4 numbers and UTF-8 character arrays.
+ */
+extern int32 utf8_to_ucs4(const char *cs);
+extern char * ucs4_to_utf8(int32 uc);
+
