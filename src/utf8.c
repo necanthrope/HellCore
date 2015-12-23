@@ -31,8 +31,6 @@
 #include "utf8.h"
 #include "storage.h"
 
-static int utf8_numbytes(char c);
-
 size_t utf8_strlen(const char* str)
 {
     char *p = (char*)str;
@@ -385,7 +383,7 @@ int32 utf8_strrindex(const char* big, const char* small, int case_matters)
     return 0;
 }
 
-static int utf8_numbytes(char c)
+int utf8_numbytes(char c)
 {
     if (0 == (0x80 & c))
     {
@@ -458,3 +456,80 @@ int utf8_convert_index(int nRealIdx, const char* pStr)
 
     return nFakeCnt;
 }
+
+int32 utf8_to_ucs4(const char *cs)
+{
+       int csl = strlen(cs);
+
+       if(cs[0] & 0200) {      // multi-byte seq
+               if((cs[0] & 0340) == 0300)                      // 110?????
+                       return (csl > 1)
+                       ? (((int32) cs[0] & 037) <<  6)
+                       + (((int32) cs[1] & 077)      ) : -1;
+               else if ((cs[0] & 0360) == 0340)        // 1110????
+                       return (csl > 2)
+                       ? (((int32) cs[0] & 017) << 12)
+                       + (((int32) cs[1] & 077) <<  6)
+                       + (((int32) cs[2] & 077)      ) : -1;
+               else if ((cs[0] & 0370) == 0360)        // 11110???
+                       return (csl > 3)
+                       ? (((int32) cs[0] &  07) << 18)
+                       + (((int32) cs[1] & 077) << 12)
+                       + (((int32) cs[2] & 077) <<  6)
+                       + (((int32) cs[3] & 077)      ) : -1;
+               else if ((cs[0] & 0374) == 0370)        // 111110??
+                       return (csl > 4)
+                       ? (((int32) cs[0] &  03) << 24)
+                       + (((int32) cs[1] & 077) << 18)
+                       + (((int32) cs[2] & 077) << 12)
+                       + (((int32) cs[3] & 077) <<  6)
+                       + (((int32) cs[4] & 077)      ) : -1;
+               else if ((cs[0] & 0376) == 0374)        // 1111110?
+                       return (csl > 5)
+                       ? (((int32) cs[0] &  01) << 30)
+                       + (((int32) cs[1] & 077) << 24)
+                       + (((int32) cs[2] & 077) << 18)
+                       + (((int32) cs[3] & 077) << 12)
+                       + (((int32) cs[4] & 077) <<  6)
+                       + (((int32) cs[5] & 077)      ) : -1;
+               else
+                       return -1;
+       } else
+               return (int32) cs[0];
+}
+
+char * ucs4_to_utf8(int32 uc)
+{
+    char *rs, *rv;
+
+    rv = rs = str_dup("xxxxxx");
+
+       if      (uc >= 0x4000000)       // 31 bits
+               *rs++ = (char) (((uc & 0x40000000) >> 30) + 0xfc);
+       else if (uc >=  0x200000)       // 26 bits
+               *rs++ = (char) (((uc &  0x3000000) >> 24) + 0xf8);
+       else if (uc >=   0x10000)       // 21 bits
+               *rs++ = (char) (((uc &   0x1c0000) >> 18) + 0xf0);
+       else if (uc >=     0x800)       // 16 bits
+               *rs++ = (char) (((uc &     0xf000) >> 12) + 0xe0);
+       else if (uc >=      0x80)       // 11 bits
+               *rs++ = (char) (((uc &      0x7c0) >>  6) + 0xc0);
+       else
+               *rs++ = (char) uc;
+
+       if (uc > 0x3ffffff)
+               *rs++ = (char) (((uc & 0x3f000000) >> 24) + 0x80);
+       if (uc >  0x1fffff)
+               *rs++ = (char) (((uc &   0xfc0000) >> 18) + 0x80);
+       if (uc >    0xffff)
+               *rs++ = (char) (((uc &    0x3f000) >> 12) + 0x80);
+       if (uc >     0x7ff)
+               *rs++ = (char) (((uc &      0xfc0) >>  6) + 0x80);
+       if (uc >      0x7f)
+               *rs++ = (char) (((uc &       0x3f)      ) + 0x80);
+
+    *rs = '\0';
+
+    return rv;
+}
+
