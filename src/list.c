@@ -440,29 +440,6 @@ strrangeset(Var base, int from, int to, Var value)
     return ans;
 }
 
-char *
-strsetoctets(const char *base, const char *value, int from, int to)
-{
- int index, offset = 0;
- int val_len = strlen(value), base_len = strlen(base);
- int lenleft = (from > 1) ? from - 1 : 0;
- int lenmiddle = val_len;
- int lenright = (base_len > to) ? base_len - to : 0;
- int newsize = lenleft + lenmiddle + lenright;
-
- char *s;
-
- s = mymalloc(sizeof(char) * (newsize + 1), M_STRING);
-
- for (index = 0; index < lenleft; index++)
-   s[offset++] = base[index];
- for (index = 0; index < lenmiddle; index++)
-   s[offset++] = value[index];
- for (index = 0; index < lenright; index++)
-   s[offset++] = base[index + to];
- s[offset] = '\0';
- return s;
-}
 
 Var
 substr(Var str, int lower, int upper)
