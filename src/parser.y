@@ -16,11 +16,6 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
-/*************************************************************************/
-/* NOTE: If you add an #include here, make sure you properly update the  */
-/*       parser.o dependency line in the Makefile.			 */
-/*************************************************************************/
-
 #include "my-ctype.h"
 #include "my-math.h"
 #include "my-stdlib.h"
