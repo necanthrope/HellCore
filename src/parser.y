@@ -35,7 +35,7 @@
 #include "log.h"
 #include "numbers.h"
 #include "opcode.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "program.h"
 #include "storage.h"
 #include "streams.h"
