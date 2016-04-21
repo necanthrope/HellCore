@@ -44,7 +44,8 @@ AC_CONFIG_SRCDIR([src/db_verbs.c])
 # For example, Makefile.in (generated automatically by automake) becomes
 # Makefile.
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/version.c])
 
 
 # Check for necessary programs.
