@@ -41,8 +41,12 @@ if [ -f $1.log ]; then
 fi
 
 echo `date`: RESTARTED >> $1.log
-echo "Restaring with $1.db, dumping to $1.db.new and logging to $1.log"
-nohup ./moo $1.db $1.db.new $2 >> $1.log 2>&1 &
+echo "Restarting with $1.db, dumping to $1.db.new and logging to $1.log"
+
+# Make sure we find moo, no matter how this script is called.
+MOO="$(dirname "$0")/moo"
+
+nohup "$MOO" $1.db $1.db.new $2 >> $1.log 2>&1 &
 
 if [ -f $1.log.old ]; then
 	echo "Now gzipping $1.log.old"
