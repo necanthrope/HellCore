@@ -18,6 +18,15 @@ cd "$(dirname "$0")"
 generate_project() {
   # Generate the build system, configure, and build the project.
 
+  # Make sure we've got autoconf installed.
+  if ! autoreconf --version >/dev/null 2>&1
+  then
+    echo "I couldn't find autoreconf."
+    echo "This probably means you don't have autoconf or automake installed."
+    echo "Please install all the dependencies in README.md."
+    exit 1
+  fi
+
   echo "Regenerating the project build system..."
   ./autogen.sh
 
@@ -35,6 +44,15 @@ configure_project() {
 
 build_project() {
   # Build the project with make.
+
+  # Make sure we've got make installed.
+  if ! make --version >/dev/null 2>&1
+  then
+    echo "I couldn't find make."
+    echo "This probably means you don't have make installed."
+    echo "Please install all the dependencies in README.md."
+    exit 1
+  fi
 
   echo "Building the project..."
   make
