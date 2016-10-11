@@ -55,7 +55,9 @@ static registry bi_function_registries[] =
     register_server,
     register_tasks,
     register_verbs,
-    register_hash
+    register_hash,
+    register_waif,
+    register_files
 };
 
 void

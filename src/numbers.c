@@ -509,6 +509,11 @@ bf_mod(Var arglist, Byte next, void *vdata, Objid progr)
     r = var_dup(arglist.v.list[1]);
     d = var_dup(arglist.v.list[2]);
 
+    if (d.v.num == 0) {
+        free_var(arglist);
+        return make_error_pack(E_DIV);
+    }
+
     if (r.type == TYPE_INT && d.type == TYPE_FLOAT) {
         r = new_float( (double) r.v.num );
     }

@@ -33,6 +33,7 @@
 #include "storage.h"
 #include "streams.h"
 #include "structures.h"
+#include "waif.h"
 #include "utils.h"
 
 /*
@@ -172,6 +173,10 @@ complex_free_var(Var v)
 	if (delref(v.v.fnum) == 0)
 	    myfree(v.v.fnum, M_FLOAT);
 	break;
+    case TYPE_WAIF:
+	if (delref(v.v.waif) == 0)
+	    free_waif(v.v.waif);
+	break;
     }
 }
 
@@ -188,6 +193,9 @@ complex_var_ref(Var v)
 	break;
     case TYPE_FLOAT:
 	addref(v.v.fnum);
+	break;
+    case TYPE_WAIF:
+	addref(v.v.waif);
 	break;
     }
     return v;
@@ -221,6 +229,8 @@ complex_var_dup(Var v)
     case TYPE_FLOAT:
 	v = new_float(*v.v.fnum);
 	break;
+    case TYPE_WAIF:
+	v.v.waif = dup_waif(v.v.waif);
     }
     return v;
 }
@@ -295,6 +305,8 @@ equality(Var lhs, Var rhs, int case_matters)
 	case TYPE_HASH:
 		return ((hashlength(lhs) == 0 && hashlength(rhs) == 0) 
 			|| lhs.v.list == rhs.v.list);
+	case TYPE_WAIF:
+		return lhs.v.waif == rhs.v.waif;
 	default:
 	    panic("EQUALITY: Unknown value type");
 	}
@@ -404,6 +416,9 @@ value_bytes(Var v)
 	size += sizeof(Var);	/* for the `length' element */
 	for (i = 1; i <= len; i++)
 	    size += value_bytes(v.v.list[i]);
+	break;
+    case TYPE_WAIF:
+	size += waif_bytes(v.v.waif);
 	break;
     default:
 	break;

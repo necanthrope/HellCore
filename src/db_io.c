@@ -39,6 +39,7 @@
 #include "str_intern.h"
 #include "unparse.h"
 #include "version.h"
+#include "waif.h"
 
 
 /*********** Input ***********/
@@ -249,6 +250,9 @@ dbio_read_var(void)
 	for (i = 1; i <= l; i++)
 	    r.v.list[i] = dbio_read_var();
 	break;
+    case _TYPE_WAIF:
+	r = read_waif();
+	break;
     default:
 	errlog("DBIO_READ_VAR: Unknown type (%d) at DB file pos. %ld\n",
 	       l, ftell(input));
@@ -402,6 +406,9 @@ dbio_write_var(Var v)
 	dbio_write_num(v.v.list[0].v.num);
 	for (i = 1; i <= v.v.list[0].v.num; i++)
 	    dbio_write_var(v.v.list[i]);
+	break;
+    case TYPE_WAIF:
+	write_waif(v);
 	break;
     }
 }
