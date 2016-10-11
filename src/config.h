@@ -272,12 +272,7 @@
 #endif /* !Config_H */
 
 /* 
- * $Log: config.h,v $
- * Revision 1.2  2009/03/08 12:41:31  blacklite
- * Added HASH data type, yield keyword, MEMORY_TRACE, vfscanf(),
- * extra myrealloc() and memcpy() tricks for lists, Valgrind
- * support for str_intern.c, etc. See ChangeLog.txt.
- *
+ * $Log: config.h.in,v $
  * Revision 1.3  2007/09/12 07:33:29  spunky
  * This is a working version of the current HellMOO server
  *

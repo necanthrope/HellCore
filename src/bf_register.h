@@ -28,6 +28,8 @@ extern void register_server(void);
 extern void register_tasks(void);
 extern void register_verbs(void);
 extern void register_hash(void);
+extern void register_waif(void);
+extern void register_files(void); 
 
 /* 
  * $Log: bf_register.h,v $

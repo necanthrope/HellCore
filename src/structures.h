@@ -19,8 +19,9 @@
 #define Structures_h 1
 
 #include "my-stdio.h"
-
+#include "options.h"
 #include "config.h"
+
 
 typedef int32 Objid;
 
@@ -56,7 +57,8 @@ typedef enum {
     TYPE_CATCH,			/* on-stack marker for an exception handler */
     TYPE_FINALLY,		/* on-stack marker for a TRY-FINALLY clause */
     _TYPE_FLOAT,		/* floating-point number; user-visible */
-    _TYPE_HASH			/* user-visible */
+    _TYPE_HASH,			/* user-visible */
+    _TYPE_WAIF			/* lightweight object; user-visible */
 } var_type;
 
 /* Types which have external data should be marked with the TYPE_COMPLEX_FLAG
@@ -73,6 +75,7 @@ typedef enum {
 #define TYPE_FLOAT		(_TYPE_FLOAT | TYPE_COMPLEX_FLAG)
 #define TYPE_LIST		(_TYPE_LIST | TYPE_COMPLEX_FLAG)
 #define TYPE_HASH		(_TYPE_HASH | TYPE_COMPLEX_FLAG)
+#define TYPE_WAIF		(_TYPE_WAIF | TYPE_COMPLEX_FLAG)
 
 #define TYPE_ANY ((var_type) -1)	/* wildcard for use in declaring built-ins */
 #define TYPE_NUMERIC ((var_type) -2)	/* wildcard for (integer or float) */
@@ -95,6 +98,33 @@ typedef struct Var Var;
 #pragma pointer_size short
 #endif
 
+struct WaifPropdefs;
+
+/* Try to make struct Waif fit into 32 bytes with this mapsz.  These bytes
+ * are probably "free" (from a powers-of-two allocator) and we can use them
+ * to save lots of space.  With 64bit addresses I think the right value is 8.
+ * If checkpoints are unforked, save space for an index used while saving.
+ * Otherwise we can alias propdefs and clobber it in the child.
+ */
+#ifdef UNFORKED_CHECKPOINTS
+#define WAIF_MAPSZ	2
+#else
+#define WAIF_MAPSZ	3
+#endif
+
+typedef struct Waif {
+	Objid			class;
+	Objid			owner;
+	struct WaifPropdefs	*propdefs;
+	Var			*propvals;
+	unsigned long		map[WAIF_MAPSZ];
+#ifdef UNFORKED_CHECKPOINTS
+	unsigned long		waif_save_index;
+#else
+#define waif_save_index		map[0]
+#endif
+} Waif;
+
 struct Var {
     union {
 	const char *str;	/* STR */
@@ -103,6 +133,7 @@ struct Var {
 	enum error err;		/* ERR */
 	Var *list;		/* LIST, HASH */
 	double *fnum;		/* FLOAT */
+	Waif *waif;		/* WAIF */
     } v;
     var_type type;
 };
