@@ -14,7 +14,7 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-CC = gcc -std=gnu99 -m32
+CC = gcc -std=gnu99
 LIBRARIES =  -lm -lcrypt -lrt
 YACC = bison -y
 
@@ -112,10 +112,10 @@ config.h: config.h.in config.status
 	./config.status
 
 y.tab.h: parser.y
-	yacc -d parser.y
+	$(YACC) -d parser.y
 
 keywords.c: keywords.gperf
-	pgperf -aCIptT -k1,3,$$ keywords.gperf \
+	gperf -aCIptT -k1,3,$$ keywords.gperf \
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
 

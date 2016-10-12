@@ -1,5 +1,5 @@
 /* C code produced by gperf version 3.0.3 */
-/* Command-line: gperf --ignore-case -aCptT -k'1,3,$' keywords.gperf  */
+/* Command-line: gperf -aCIptT -k'1,3,$' keywords.gperf  */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
       && ('%' == 37) && ('&' == 38) && ('\'' == 39) && ('(' == 40) \
@@ -57,56 +57,14 @@ error "gperf generated tables don't work with this execution character set. Plea
 
 /**/
 
+#include <string.h>
 
 #define TOTAL_KEYWORDS 36
 #define MIN_WORD_LENGTH 2
 #define MAX_WORD_LENGTH 9
 #define MIN_HASH_VALUE 3
-#define MAX_HASH_VALUE 63
-/* maximum key range = 61, duplicates = 0 */
-
-#ifndef GPERF_DOWNCASE
-#define GPERF_DOWNCASE 1
-static unsigned char gperf_downcase[256] =
-  {
-      0,   1,   2,   3,   4,   5,   6,   7,   8,   9,  10,  11,  12,  13,  14,
-     15,  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  27,  28,  29,
-     30,  31,  32,  33,  34,  35,  36,  37,  38,  39,  40,  41,  42,  43,  44,
-     45,  46,  47,  48,  49,  50,  51,  52,  53,  54,  55,  56,  57,  58,  59,
-     60,  61,  62,  63,  64,  97,  98,  99, 100, 101, 102, 103, 104, 105, 106,
-    107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121,
-    122,  91,  92,  93,  94,  95,  96,  97,  98,  99, 100, 101, 102, 103, 104,
-    105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119,
-    120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134,
-    135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149,
-    150, 151, 152, 153, 154, 155, 156, 157, 158, 159, 160, 161, 162, 163, 164,
-    165, 166, 167, 168, 169, 170, 171, 172, 173, 174, 175, 176, 177, 178, 179,
-    180, 181, 182, 183, 184, 185, 186, 187, 188, 189, 190, 191, 192, 193, 194,
-    195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 208, 209,
-    210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 221, 222, 223, 224,
-    225, 226, 227, 228, 229, 230, 231, 232, 233, 234, 235, 236, 237, 238, 239,
-    240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 250, 251, 252, 253, 254,
-    255
-  };
-#endif
-
-#ifndef GPERF_CASE_STRCMP
-#define GPERF_CASE_STRCMP 1
-static int
-gperf_case_strcmp (s1, s2)
-     register const char *s1;
-     register const char *s2;
-{
-  for (;;)
-    {
-      unsigned char c1 = gperf_downcase[(unsigned char)*s1++];
-      unsigned char c2 = gperf_downcase[(unsigned char)*s2++];
-      if (c1 != 0 && c1 == c2)
-        continue;
-      return (int)c1 - (int)c2;
-    }
-}
-#endif
+#define MAX_HASH_VALUE 51
+/* maximum key range = 49, duplicates = 0 */
 
 #ifdef __GNUC__
 __inline
@@ -122,32 +80,32 @@ hash (str, len)
 {
   static const unsigned char asso_values[] =
     {
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 25,  0, 20,  0,  0,
-       0, 20, 64, 20, 64, 35, 64, 35, 15, 64,
-       5, 15,  0, 20, 10, 64, 25,  0, 64,  5,
-      64, 64, 64, 64, 64, 64, 64, 25,  0, 20,
-       0,  0,  0, 20, 64, 20, 64, 35, 64, 35,
-      15, 64,  5, 15,  0, 20, 10, 64, 25,  0,
-      64,  5, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-      64, 64, 64, 64, 64, 64
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52,  0, 52, 20,  0,  0,
+       0,  5, 52, 35, 52, 52, 52, 10, 20, 52,
+      25, 35, 25, 45, 30, 52, 20, 52, 52,  0,
+      52, 52, 52, 52, 52, 52, 52, 52, 10, 15,
+       0,  0,  5, 52, 52, 15, 52,  0, 52, 52,
+       0, 52, 52, 52,  5,  5, 10, 52, 52,  0,
+      52,  0, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52, 52, 52, 52, 52,
+      52, 52, 52, 52, 52, 52
     };
   register int hval = len;
 
@@ -178,53 +136,51 @@ in_word_set (str, len)
   static const struct keyword wordlist[] =
     {
       {""}, {""}, {""},
-#line 36 "keywords.gperf"
-      {"for",		DBV_Prehistory, tFOR},
+#line 48 "keywords.gperf"
+      {"ANY",		DBV_Exceptions, tANY},
       {""},
-#line 35 "keywords.gperf"
-      {"endif",		DBV_Prehistory, tENDIF},
-#line 38 "keywords.gperf"
-      {"endfor",		DBV_Prehistory, tENDFOR},
-#line 61 "keywords.gperf"
-      {"E_RANGE",	DBV_Prehistory, tERROR,	E_RANGE},
-#line 43 "keywords.gperf"
-      {"endwhile",	DBV_Prehistory, tENDWHILE},
-#line 59 "keywords.gperf"
-      {"E_RECMOVE",	DBV_Prehistory, tERROR,	E_RECMOVE},
 #line 67 "keywords.gperf"
       {"yield",		DBV_Hash, tYIELD},
 #line 47 "keywords.gperf"
       {"endtry",		DBV_Exceptions, tENDTRY},
-      {""},
-#line 55 "keywords.gperf"
-      {"E_PROPNF",	DBV_Prehistory, tERROR,	E_PROPNF},
-      {""}, {""},
-#line 52 "keywords.gperf"
-      {"E_TYPE",		DBV_Prehistory, tERROR,	E_TYPE},
-#line 66 "keywords.gperf"
-      {"E_FLOAT",	DBV_Float,	tERROR,	E_FLOAT},
-      {""}, {""}, {""},
-#line 51 "keywords.gperf"
-      {"E_NONE",		DBV_Prehistory, tERROR,	E_NONE},
-#line 32 "keywords.gperf"
-      {"if",		DBV_Prehistory, tIF},
-#line 44 "keywords.gperf"
-      {"try",		DBV_Exceptions, tTRY},
+#line 40 "keywords.gperf"
+      {"endfork",	DBV_Prehistory, tENDFORK},
+#line 43 "keywords.gperf"
+      {"endwhile",	DBV_Prehistory, tENDWHILE},
 #line 33 "keywords.gperf"
       {"else",		DBV_Prehistory, tELSE},
-#line 42 "keywords.gperf"
-      {"while",		DBV_Prehistory, tWHILE},
-#line 34 "keywords.gperf"
-      {"elseif",		DBV_Prehistory, tELSEIF},
+#line 35 "keywords.gperf"
+      {"endif",		DBV_Prehistory, tENDIF},
+#line 38 "keywords.gperf"
+      {"endfor",		DBV_Prehistory, tENDFOR},
 #line 46 "keywords.gperf"
       {"finally",	DBV_Exceptions, tFINALLY},
-#line 58 "keywords.gperf"
-      {"E_INVIND",	DBV_Prehistory, tERROR,	E_INVIND},
+#line 44 "keywords.gperf"
+      {"try",		DBV_Exceptions, tTRY},
+#line 39 "keywords.gperf"
+      {"fork",		DBV_Prehistory, tFORK},
+#line 49 "keywords.gperf"
+      {"break",		DBV_BreakCont, tBREAK},
+#line 34 "keywords.gperf"
+      {"elseif",		DBV_Prehistory, tELSEIF},
+#line 37 "keywords.gperf"
+      {"in",		DBV_Prehistory, tIN},
+#line 36 "keywords.gperf"
+      {"for",		DBV_Prehistory, tFOR},
+      {""},
+#line 42 "keywords.gperf"
+      {"while",		DBV_Prehistory, tWHILE},
+#line 41 "keywords.gperf"
+      {"return",		DBV_Prehistory, tRETURN},
+#line 32 "keywords.gperf"
+      {"if",		DBV_Prehistory, tIF},
+#line 50 "keywords.gperf"
+      {"continue",	DBV_BreakCont, tCONTINUE},
       {""},
 #line 53 "keywords.gperf"
       {"E_DIV",		DBV_Prehistory, tERROR,	E_DIV},
-#line 41 "keywords.gperf"
-      {"return",		DBV_Prehistory, tRETURN},
+#line 51 "keywords.gperf"
+      {"E_NONE",		DBV_Prehistory, tERROR,	E_NONE},
 #line 57 "keywords.gperf"
       {"E_VARNF",	DBV_Prehistory, tERROR,	E_VARNF},
 #line 56 "keywords.gperf"
@@ -232,34 +188,35 @@ in_word_set (str, len)
       {""}, {""},
 #line 45 "keywords.gperf"
       {"except",		DBV_Exceptions, tEXCEPT},
-#line 37 "keywords.gperf"
-      {"in",		DBV_Prehistory, tIN},
-#line 48 "keywords.gperf"
-      {"ANY",		DBV_Exceptions, tANY},
-#line 39 "keywords.gperf"
-      {"fork",		DBV_Prehistory, tFORK},
-#line 49 "keywords.gperf"
-      {"break",		DBV_BreakCont, tBREAK},
-#line 63 "keywords.gperf"
-      {"E_NACC",		DBV_Prehistory, tERROR,	E_NACC},
-#line 40 "keywords.gperf"
-      {"endfork",	DBV_Prehistory, tENDFORK},
-#line 50 "keywords.gperf"
-      {"continue",	DBV_BreakCont, tCONTINUE},
+#line 61 "keywords.gperf"
+      {"E_RANGE",	DBV_Prehistory, tERROR,	E_RANGE},
+#line 55 "keywords.gperf"
+      {"E_PROPNF",	DBV_Prehistory, tERROR,	E_PROPNF},
+#line 59 "keywords.gperf"
+      {"E_RECMOVE",	DBV_Prehistory, tERROR,	E_RECMOVE},
+      {""},
+#line 52 "keywords.gperf"
+      {"E_TYPE",		DBV_Prehistory, tERROR,	E_TYPE},
+#line 66 "keywords.gperf"
+      {"E_FLOAT",	DBV_Float,	tERROR,	E_FLOAT},
+#line 60 "keywords.gperf"
+      {"E_MAXREC",	DBV_Prehistory, tERROR,	E_MAXREC},
       {""}, {""},
 #line 54 "keywords.gperf"
       {"E_PERM",		DBV_Prehistory, tERROR,	E_PERM},
 #line 65 "keywords.gperf"
       {"E_QUOTA",	DBV_Prehistory, tERROR,	E_QUOTA},
+#line 58 "keywords.gperf"
+      {"E_INVIND",	DBV_Prehistory, tERROR,	E_INVIND},
+      {""}, {""},
+#line 63 "keywords.gperf"
+      {"E_NACC",		DBV_Prehistory, tERROR,	E_NACC},
+      {""},
 #line 64 "keywords.gperf"
       {"E_INVARG",	DBV_Prehistory, tERROR,	E_INVARG},
       {""}, {""},
 #line 62 "keywords.gperf"
-      {"E_ARGS",		DBV_Prehistory, tERROR,	E_ARGS},
-      {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""}, {""},
-      {""}, {""},
-#line 60 "keywords.gperf"
-      {"E_MAXREC",	DBV_Prehistory, tERROR,	E_MAXREC}
+      {"E_ARGS",		DBV_Prehistory, tERROR,	E_ARGS}
     };
 
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
@@ -270,7 +227,7 @@ in_word_set (str, len)
         {
           register const char *s = wordlist[key].name;
 
-          if ((((unsigned char)*str ^ (unsigned char)*s) & ~32) == 0 && !gperf_case_strcmp (str, s))
+          if (*str == *s && !strcmp (str + 1, s + 1))
             return &wordlist[key];
         }
     }
