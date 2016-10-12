@@ -100,6 +100,10 @@ fill_in_rt_consts(Var * env, DB_Version version)
 	v.v.num = (int) _TYPE_HASH;
 	env[SLOT_HASH] = var_ref(v);
     }
+    if (version >= DBV_Waif) {
+	v.v.num = (int) _TYPE_WAIF;
+	env[SLOT_WAIF] = var_ref(v);
+    }
 }
 
 void
