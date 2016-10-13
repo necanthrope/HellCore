@@ -62,7 +62,7 @@ first_user_slot(DB_Version version)
 	
     if (version >= DBV_Hash)
 	count += 1;
-    if (version >= DBV_waif)
+    if (version >= DBV_Waif)
 	count += 1;
 
     return count;
