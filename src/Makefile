@@ -14,7 +14,7 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-CC = gcc -std=gnu99
+CC = gcc -std=gnu99 -m32
 LIBRARIES =  -lm -lcrypt -lrt
 YACC = bison -y
 

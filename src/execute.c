@@ -2237,11 +2237,11 @@ do {    						    	\
 		    if (ticks_remaining <= YIELD_THRESHOLD_TICKS
 		     || timer_wakeup_interval(task_alarm_id) <= YIELD_THRESHOLD_SECONDS) {
 		    	enum error e;
-		    	int yield_secs;
+		    	double yield_secs;
 			package p;
 
 		    	if (eop == EOP_YIELD0) {
-		    	    yield_secs = YIELD_FOR_SECONDS;
+		    	    yield_secs = (double) YIELD_FOR_SECONDS;
 		    	} else {
 		    	   Var time = POP();
 		    	   if (time.type != TYPE_INT) {
@@ -2253,7 +2253,7 @@ do {    						    	\
 		    	   	PUSH_ERROR(E_INVARG);
 		    	   	break;
 		    	   }
-		   	   yield_secs = time.v.num;
+		   	   yield_secs = (double) time.v.num;
 		    	}
 		    
 		    	p = make_suspend_pack(enqueue_yielded_task, &yield_secs);
