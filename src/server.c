@@ -36,7 +36,7 @@
 #include "log.h"
 #include "network.h"
 #include "options.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "profiler.h"
 #include "random.h"
 #include "server.h"

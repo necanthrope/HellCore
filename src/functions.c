@@ -36,7 +36,7 @@
  * a C function that will register your new MOO built-ins; your C function will
  * be called exactly once, during server initialization.  Also add a
  * declaration of that C function to `bf_register.h' and add the necessary .c
- * files to the `CSRCS' line in the Makefile.
+ * files to the `moo_SOURCES' line in the Makefile.am.
  ****************************************************************************/
 
 typedef void (*registry) ();
