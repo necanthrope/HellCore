@@ -47,7 +47,6 @@
 #include "tasks.h"
 #include "timers.h"
 #include "utils.h"
-#include "waif.h"
 #include "version.h"
 #include "utf8.h"
 
@@ -515,9 +514,8 @@ make_stack_list(activation * stack, int start, int end, int include_end,
 
 	if (include_end || i != end) {
 	    v = r.v.list[j++] = new_list(listsize);
-	   // v.v.list[1].type = TYPE_OBJ;
-	   // v.v.list[1].v.obj = stack[i].this;
-	    v.v.list[1] = var_ref(stack[i].THIS);
+	    v.v.list[1].type = TYPE_OBJ;
+	    v.v.list[1].v.obj = stack[i].this;
 	    v.v.list[2].type = TYPE_STR;
 	    v.v.list[2].v.str = str_ref(stack[i].verb);
 	    v.v.list[3].type = TYPE_OBJ;
@@ -643,7 +641,6 @@ free_activation(activation a, char data_too)
     for (i = a.base_rt_stack; i < a.top_rt_stack; i++)
 	free_var(*i);
     free_rt_stack(&a);
-    free_var(a.THIS);
     free_var(a.temp);
     free_str(a.verb);
     free_str(a.verbname);
@@ -660,12 +657,11 @@ free_activation(activation a, char data_too)
   does not change the vm in case of any error **/
 
 enum error
-_call_verb(Objid this, const char *vname, Var THIS, Var args, int do_pass)
+call_verb(Objid this, const char *vname, Var args, int do_pass)
 {
     /* if call succeeds, args will be consumed.  If call fails, args
        will NOT be consumed  -- it must therefore be freed by caller */
     /* vname will never be consumed */
-    /* THIS will never be consumed */
 
     /* do_pass:
      *   1 - normal pass, find this verb on parent of this.
@@ -711,7 +707,6 @@ _call_verb(Objid this, const char *vname, Var THIS, Var args, int do_pass)
     RUN_ACTIV.prog = program_ref(program);
 
     RUN_ACTIV.this = this;
-    RUN_ACTIV.THIS = var_ref(THIS);
     RUN_ACTIV.progr = db_verb_owner(h);
     RUN_ACTIV.vloc = db_verb_definer(h);
     RUN_ACTIV.verb = str_ref(vname);
@@ -733,8 +728,8 @@ _call_verb(Objid this, const char *vname, Var THIS, Var args, int do_pass)
 
     fill_in_rt_consts(env, program->version);
 
-    set_rt_env_var(env, SLOT_THIS, var_ref(THIS));
-    set_rt_env_var(env, SLOT_CALLER, var_ref(CALLER_ACTIV.THIS));
+    set_rt_env_obj(env, SLOT_THIS, this);
+    set_rt_env_obj(env, SLOT_CALLER, CALLER_ACTIV.this);
 
 #define ENV_COPY(slot) \
     set_rt_env_var(env, slot, var_ref(CALLER_ACTIV.rt_env[slot]))
@@ -756,11 +751,7 @@ _call_verb(Objid this, const char *vname, Var THIS, Var args, int do_pass)
 #undef ENV_COPY
 
     v.type = TYPE_STR;
-     if (vname[0] == WAIF_VERB_PREFIX) {
- 	v.v.str = str_dup(vname + 1);
- 	free_str(vname);
-     } else
-	    v.v.str = vname;
+    v.v.str = vname;
     set_rt_env_var(env, SLOT_VERB, v);	/* no var_dup */
     set_rt_env_var(env, SLOT_ARGS, args);	/* no var_dup */
 
@@ -768,16 +759,7 @@ _call_verb(Objid this, const char *vname, Var THIS, Var args, int do_pass)
 
     return E_NONE;
 }
- enum error
- call_verb(Objid this, const char *vname, Var args, int do_pass)
- {
- 	Var THIS;
- 
- 	THIS.type = TYPE_OBJ;
- 	THIS.v.obj = this;
- 	return _call_verb(this, vname, THIS, args, do_pass);
- }
- 
+
 static int
 rangeset_check(int end, int from, int to)
 {
@@ -1588,18 +1570,7 @@ do {    						    	\
 
 		propname = POP();	/* should be string */
 		obj = POP();	/* should be objid */
-		if (obj.type == TYPE_WAIF && propname.type == TYPE_STR) {
-		    enum error err;
-
-		    err = waif_get_prop(obj.v.waif, propname.v.str, &prop,
-					RUN_ACTIV.progr);
-		    free_var(propname);
-		    free_var(obj);
-		    if (err == E_NONE)
-			PUSH(prop);
-		    else
-			PUSH_ERROR(err);
-		} else if (propname.type != TYPE_STR || obj.type != TYPE_OBJ) {
+		if (propname.type != TYPE_STR || obj.type != TYPE_OBJ) {
 		    free_var(propname);
 		    free_var(obj);
 		    PUSH_ERROR(E_TYPE);
@@ -1633,17 +1604,7 @@ do {    						    	\
 
 		propname = TOP_RT_VALUE;
 		obj = NEXT_TOP_RT_VALUE;
-
-		if (obj.type == TYPE_WAIF && propname.type == TYPE_STR) {
-		    enum error err;
-
-		    err = waif_get_prop(obj.v.waif, propname.v.str, &prop,
-					RUN_ACTIV.progr);
-		    if (err == E_NONE)
-			PUSH(prop);
-		    else
-			PUSH_ERROR(err);
-		} else if (propname.type != TYPE_STR || obj.type != TYPE_OBJ)
+		if (propname.type != TYPE_STR || obj.type != TYPE_OBJ)
 		    PUSH_ERROR(E_TYPE);
 		else if (!valid(obj.v.obj))
 		    PUSH_ERROR(E_INVIND);
@@ -1672,21 +1633,7 @@ do {    						    	\
 		rhs = POP();	/* any type */
 		propname = POP();	/* should be string */
 		obj = POP();	/* should be objid */
-
-		if (obj.type == TYPE_WAIF && propname.type == TYPE_STR) {
-		    enum error err;
-
-		    err = waif_put_prop(obj.v.waif, propname.v.str, rhs,
-					RUN_ACTIV.progr);
-		    free_var(propname);
-		    free_var(obj);
-		    if (err == E_NONE) {
-			PUSH(rhs);
-		    } else {
-		        free_var(rhs);
-			PUSH_ERROR(err);
-		    }
-		} else if (obj.type != TYPE_OBJ || propname.type != TYPE_STR) {
+		if (obj.type != TYPE_OBJ || propname.type != TYPE_STR) {
 		    free_var(rhs);
 		    free_var(propname);
 		    free_var(obj);
@@ -1780,24 +1727,21 @@ do {    						    	\
 	    {
 		Var time;
 		unsigned id = 0, f_index;
-		double when;
 
 		time = POP();
 		f_index = READ_BYTES(bv, bc.numbytes_fork);
 		if (op == OP_FORK_WITH_ID)
 		    id = READ_BYTES(bv, bc.numbytes_var_name);
-		if (time.type != TYPE_INT && time.type != TYPE_FLOAT) {
+		if (time.type != TYPE_INT) {
 		    free_var(time);
 		    RAISE_ERROR(E_TYPE);
-		}
-		when = time.type == TYPE_INT ? time.v.num : * time.v.fnum;
-		free_var(time);
-		if(when < 0) {
+		} else if (time.v.num < 0) {
+		    free_var(time);
 		    RAISE_ERROR(E_INVARG);
 		} else {
 		    enum error e;
 
-		    e = enqueue_forked_task2(RUN_ACTIV, f_index, when,
+		    e = enqueue_forked_task2(RUN_ACTIV, f_index, time.v.num,
 			op == OP_FORK_WITH_ID ? id : -1);
 		    if (e != E_NONE)
 			RAISE_ERROR(e);
@@ -1805,39 +1749,23 @@ do {    						    	\
 	    }
 	    break;
 
-  	case OP_CALL_VERB:
-  	    {
- 		enum error err = E_NONE;
-  		Var args, verb, obj;
- 		Objid class;
-  
-  		args = POP();	/* args, should be list */
-  		verb = POP();	/* verbname, should be string */
-  		obj = POP();	/* objid, should be obj */
-  
- 		if (verb.type != TYPE_STR || args.type != TYPE_LIST) {
- 			err = E_TYPE;
- 		} else if (obj.type == TYPE_WAIF) {
- 			char *str = mymalloc(strlen(verb.v.str) + 2,M_STRING);
- 
- 			class = obj.v.waif->class;
-                         str[0] = WAIF_VERB_PREFIX;
-                         strcpy(str + 1, verb.v.str);
-                         free_str(verb.v.str);
-                         verb.v.str = str;
- 		} else if (obj.type == TYPE_OBJ) {
- 			class = obj.v.obj;
- 			if (verb.v.str[0] == WAIF_VERB_PREFIX)
- 				err = E_VERBNF;
- 		} else
- 			err = E_TYPE;
- 
- 		if (err == E_NONE && !valid(class))
- 			err = E_INVIND;
- 
- 		if (err == E_NONE) {
-  		    STORE_STATE_VARIABLES();
- 		    err = _call_verb(class, verb.v.str, obj, args, 0);
+	case OP_CALL_VERB:
+	    {
+		enum error err;
+		Var args, verb, obj;
+
+		args = POP();	/* args, should be list */
+		verb = POP();	/* verbname, should be string */
+		obj = POP();	/* objid, should be obj */
+
+		if (args.type != TYPE_LIST || verb.type != TYPE_STR
+		    || obj.type != TYPE_OBJ)
+		    err = E_TYPE;
+		else if (!valid(obj.v.obj)) {
+		    err = E_INVIND;
+		} else {
+		    STORE_STATE_VARIABLES();
+		    err = call_verb(obj.v.obj, verb.v.str, args, 0);
 		    /* if there is no error, RUN_ACTIV is now the CALLEE's.
 		       args will be consumed in the new rt_env */
 		    /* if there is an error, then RUN_ACTIV is unchanged, and
@@ -2246,11 +2174,11 @@ do {    						    	\
 		    if (ticks_remaining <= YIELD_THRESHOLD_TICKS
 		     || timer_wakeup_interval(task_alarm_id) <= YIELD_THRESHOLD_SECONDS) {
 		    	enum error e;
-		    	double yield_secs;
+		    	int yield_secs;
 			package p;
 
 		    	if (eop == EOP_YIELD0) {
-		    	    yield_secs = (double) YIELD_FOR_SECONDS;
+		    	    yield_secs = YIELD_FOR_SECONDS;
 		    	} else {
 		    	   Var time = POP();
 		    	   if (time.type != TYPE_INT) {
@@ -2262,7 +2190,7 @@ do {    						    	\
 		    	   	PUSH_ERROR(E_INVARG);
 		    	   	break;
 		    	   }
-		   	   yield_secs = (double) time.v.num;
+		   	   yield_secs = time.v.num;
 		    	}
 		    
 		    	p = make_suspend_pack(enqueue_yielded_task, &yield_secs);
@@ -2539,7 +2467,7 @@ run_interpreter(char raise, enum error e,
 Objid
 caller()
 {
-    return RUN_ACTIV.this;	/* XXX waifs?! */
+    return RUN_ACTIV.this;
 }
 
 static void
@@ -2653,8 +2581,6 @@ do_server_program_task(Objid this, const char *verb, Var args, Objid vloc,
 
     RUN_ACTIV.rt_env = env = new_rt_env(program->num_var_names);
     RUN_ACTIV.this = this;
-    RUN_ACTIV.THIS.type = TYPE_OBJ;
-    RUN_ACTIV.THIS.v.obj = this;
     RUN_ACTIV.player = player;
     RUN_ACTIV.progr = progr;
     RUN_ACTIV.vloc = vloc;
@@ -2689,8 +2615,6 @@ do_input_task(Objid user, Parsed_Command * pc, Objid this, db_verb_handle vh)
 
     RUN_ACTIV.rt_env = env = new_rt_env(prog->num_var_names);
     RUN_ACTIV.this = this;
-    RUN_ACTIV.THIS.type = TYPE_OBJ;
-    RUN_ACTIV.THIS.v.obj = this;
     RUN_ACTIV.player = user;
     RUN_ACTIV.progr = db_verb_owner(vh);
     RUN_ACTIV.vloc = db_verb_definer(vh);
@@ -2753,8 +2677,6 @@ setup_activ_for_eval(Program * prog)
     set_rt_env_var(env, SLOT_ARGS, new_list(0));
 
     RUN_ACTIV.this = NOTHING;
-    RUN_ACTIV.THIS.type = TYPE_OBJ;
-    RUN_ACTIV.THIS.v.obj = NOTHING;
     RUN_ACTIV.player = CALLER_ACTIV.player;
     RUN_ACTIV.progr = CALLER_ACTIV.progr;
     RUN_ACTIV.vloc = NOTHING;
@@ -2874,24 +2796,20 @@ bf_raise(Var arglist, Byte next, void *vdata, Objid progr)
 static package
 bf_suspend(Var arglist, Byte next, void *vdata, Objid progr)
 {
-    static double seconds, *secondsp = NULL;
+    static int seconds;
     int nargs = arglist.v.list[0].v.num;
 
-	if(nargs >= 1) {
-		seconds = arglist.v.list[1].type == TYPE_INT ?
-					arglist.v.list[1].v.num :
-					*arglist.v.list[1].v.fnum;
-		secondsp = &seconds;
-	} else {
-		secondsp = NULL;
-	}
+    if (nargs >= 1)
+	seconds = arglist.v.list[1].v.num;
+    else
+	seconds = -1;
     free_var(arglist);
 
     if (nargs >= 1 && seconds < 0)
 	return make_error_pack(E_INVARG);
     else {
         task_was_suspended = 1;
-	return make_suspend_pack(enqueue_suspended_task, secondsp);
+	return make_suspend_pack(enqueue_suspended_task, &seconds);
     }
 }
 
@@ -2967,8 +2885,7 @@ bf_cputime(Var arglist, Byte next, void *vdata, Objid progr)
 static package
 bf_pass(Var arglist, Byte next, void *vdata, Objid progr)
 {
-    enum error e = _call_verb(RUN_ACTIV.this, RUN_ACTIV.verb, RUN_ACTIV.THIS,
-			arglist, 1);
+    enum error e = call_verb(RUN_ACTIV.this, RUN_ACTIV.verb, arglist, 1);
 
     if (e == E_NONE)
 	return tail_call_pack();
@@ -3115,7 +3032,7 @@ register_execute(void)
 				      bf_call_function_write,
 				      TYPE_STR);
     register_function("raise", 1, 3, bf_raise, TYPE_ANY, TYPE_STR, TYPE_ANY);
-    register_function("suspend", 0, 1, bf_suspend, TYPE_NUMERIC);
+    register_function("suspend", 0, 1, bf_suspend, TYPE_INT);
     register_function("read", 0, 2, bf_read, TYPE_OBJ, TYPE_ANY);
 
     register_function("seconds_left", 0, 0, bf_seconds_left);
@@ -3137,7 +3054,11 @@ register_execute(void)
 void
 write_activ_as_pi(activation a)
 {
-    dbio_write_var(a.THIS);
+    Var dummy;
+
+    dummy.type = TYPE_INT;
+    dummy.v.num = -111;
+    dbio_write_var(dummy);
 
     dbio_printf("%d %d %d %d %d %d %d %d %d\n",
 	    a.this, -7, -8, a.player, -9, a.progr, a.vloc, -10, a.debug);
@@ -3152,11 +3073,10 @@ write_activ_as_pi(activation a)
 int
 read_activ_as_pi(activation * a)
 {
-    Var T;
     int dummy;
     char c;
 
-    T = dbio_read_var();
+    free_var(dbio_read_var());
 
     /* I use a `dummy' variable here and elsewhere instead of the `*'
      * assignment-suppression syntax of `scanf' because it allows more
@@ -3171,17 +3091,6 @@ read_activ_as_pi(activation * a)
 	errlog("READ_A: Bad numbers.\n");
 	return 0;
     }
-    switch (T.type) {
-    case TYPE_WAIF:
-    case TYPE_OBJ:
-	break;
-    default:
-	T.type = TYPE_OBJ;
-	T.v.obj = a->this;
-	break;
-    }
-    a->THIS = T;
-
     dbio_read_string();		/* was argstr */
     dbio_read_string();		/* was dobjstr */
     dbio_read_string();		/* was iobjstr */
@@ -3393,7 +3302,7 @@ read_activ(activation * a, int which_vector)
 }
 
 
-char rcsid_execute[] = "$Id: execute.c,v 1.19 2014/02/26 09:02:00 broseidon Exp $";
+char rcsid_execute[] = "$Id: execute.c,v 1.19 2010/05/17 07:25:35 blacklite Exp $";
 
 /* 
  * $Log: execute.c,v $

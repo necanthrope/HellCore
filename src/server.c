@@ -426,7 +426,7 @@ static void
 main_loop(void)
 {
     int i;
-	int res;
+
     /* First, notify DB of disconnections for all checkpointed connections */
     for (i = 1; i <= checkpointed_connections.v.list[0].v.num; i++) {
 	Var v;
@@ -454,8 +454,8 @@ main_loop(void)
 	 * We only care about three cases (== 0, == 1, and > 1), so we can
 	 * map a `never' result from the task subsystem into 2.
 	 */
-	int task_useconds = next_task_start();
-	int useconds_left = task_useconds < 0 ? 1000000 : task_useconds;
+	int task_seconds = next_task_start();
+	int seconds_left = task_seconds < 0 ? 2 : task_seconds;
 	shandle *h, *nexth;
 
 	if (checkpoint_requested != CHKPT_OFF) {
@@ -479,7 +479,11 @@ main_loop(void)
 	    checkpoint_finished = 0;
 	}
 #endif
-	res = network_process_io(useconds_left);
+
+	if (!network_process_io(seconds_left ? 1 : 0) && seconds_left > 1)
+	    db_flush(FLUSH_ONE_SECOND);
+	else
+	    db_flush(FLUSH_IF_FULL);
 
 	run_ready_tasks();
 
@@ -1289,7 +1293,6 @@ main(int argc, char **argv)
     }
     oklog("STARTING: Version %s of the LambdaMOO server\n", server_version);
     oklog("          (Using %s protocol)\n", network_protocol_name());
-    oklog("          (Using File Utilities Package version %s)\n", FUP_version);
     oklog("          (Task timeouts measured in %s seconds.)\n",
 	  virtual_timer_available()? "server CPU" : "wall-clock");
 

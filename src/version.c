@@ -40,8 +40,7 @@
 #include "config.h"
 #include "version.h"
 
-const char *FUP_version = "1.9";
-const char *server_version = "1.10.4ulg2";
+const char *server_version = "1.10.4u1g2";
 
 int
 check_version(DB_Version version)

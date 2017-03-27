@@ -20,7 +20,6 @@
 
 #include "config.h"
 
-extern const char *FUP_version;
 extern const char *server_version;
 
 /* The following list must never be reordered, only appended to.  There is one
@@ -47,7 +46,6 @@ typedef enum {
 				 * bug handling in read_bi_func_data().
 				 */
     DBV_Hash,			/* Addition of `HASH' variables. */
-    DBV_Waif,			/* Addition of `WAIF' type, subsecond suspend, FUP */
     Num_DB_Versions		/* Special: the current version is this - 1. */
 } DB_Version;
 

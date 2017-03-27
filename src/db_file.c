@@ -38,7 +38,6 @@
 #include "tasks.h"
 #include "timers.h"
 #include "version.h"
-#include "waif.h"
 
 static char *input_db_name, *dump_db_name;
 static int dump_generation = 0;
@@ -412,8 +411,6 @@ read_db_file(void)
     db_verb_handle h;
     Program *program;
 
-    waif_before_loading();
-
     if (dbio_scanf(header_format_string, &dbio_input_version) != 1)
 	dbio_input_version = DBV_Prehistory;
 
@@ -490,8 +487,6 @@ read_db_file(void)
 	errlog("DB_READ: Can't read active connections.\n");
 	return 0;
     }
-
-    waif_after_loading();
     return 1;
 }
 
@@ -508,8 +503,6 @@ write_db_file(const char *reason)
     int i;
     volatile int nprogs = 0;
     volatile int success = 1;
-
-    waif_before_saving();
 
     for (oid = 0; oid <= max_oid; oid++) {
 	if (valid(oid))
@@ -555,8 +548,6 @@ write_db_file(const char *reason)
     EXCEPT(dbpriv_dbio_failed)
 	success = 0;
     ENDTRY;
-
-    waif_after_saving();
 
     return success;
 }

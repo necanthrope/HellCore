@@ -45,10 +45,6 @@ typedef struct {
     void *bi_func_data;
     Var temp;			/* VM's temp register */
 
-    /* waifs mean there can be other values for THIS, and we need a secure
-     * way to store it so the verb can't spoof
-     */
-    Var THIS;
     /* verb information */
     Objid this;
     Objid player;

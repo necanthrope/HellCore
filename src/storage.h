@@ -41,8 +41,6 @@ typedef enum Memory_Type {
 
     M_HASH,
 
-    M_WAIF, M_WAIF_XTRA,
-
     Sizeof_Memory_Type
 
 } Memory_Type;
