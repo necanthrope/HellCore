@@ -26,14 +26,17 @@ You should be able to login with 'connect Wizard', then change your password.
 
 FOR UNICODE BRANCH ONLY:
 
-run this commands before running make:
+Change to the src directory, and run this commands:
 
 > gperf -aCIptT -k1,3,$ keywords.gperf | sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' > keywords.c
 
 > bison -dy parser.y
 
+In any branch:
 
-Simply change to the src directory, and type 'make'.  This should build the moo binary.
+> make
+
+This should build the moo binary.
 
 ### USE AT YOUR OWN RISK. I DENY RESPONSIBILITY FOR:
 * Spontaneous hairy nose
