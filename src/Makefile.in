@@ -35,7 +35,7 @@ CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	log.c malloc.c match.c md5.c name_lookup.c network.c net_mplex.c \
 	net_proto.c numbers.c objects.c parse_cmd.c pattern.c pipe_utils.c profiler.c program.c \
 	property.c quota.c ref_count.c regexpr.c server.c storage.c streams.c str_intern.c \
-	sym_table.c tasks.c timers.c unparse.c utf8.c utils.c verbs.c version.c
+	sym_table.c tasks.c timers.c unparse.c utf8.c utils.c verbs.c version.c files.c
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -357,12 +357,15 @@ eval_vm.o: eval_vm.c config.h db_io.h program.h structures.h my-stdio.h \
  version.h decompile.h ast.h parser.h sym_table.h eval_vm.h execute.h \
  db.h opcode.h options.h parse_cmd.h log.h storage.h ref_count.h tasks.h
 exceptions.o: exceptions.c exceptions.h config.h
-execute.o: execute.c my-string.h config.h my-time.h db.h program.h \
- structures.h my-stdio.h version.h db_io.h decompile.h ast.h parser.h \
- sym_table.h eval_env.h eval_vm.h execute.h opcode.h options.h \
- parse_cmd.h exceptions.h functions.h hash.h list.h log.h numbers.h \
- profiler.h server.h network.h storage.h ref_count.h streams.h tasks.h \
- timers.h utils.h my-stdlib.h utf8.h my-types.h
+execute.o: execute.c my-string.h config.h db.h program.h structures.h \
+ my-stdio.h version.h db_io.h decompile.h ast.h parser.h sym_table.h \
+ eval_env.h eval_vm.h execute.h opcode.h options.h parse_cmd.h \
+ exceptions.h functions.h hash.h list.h log.h numbers.h server.h \
+ network.h storage.h ref_count.h streams.h tasks.h timers.h my-time.h \
+ utils.h my-stdlib.h utf8.h my-types.h profiler.h 
+files.o : files.c my-stdarg.h config.h functions.h my-stdio.h bf_register.h \
+  execute.h opcode.h options.h program.h structures.h log.h server.h \
+  network.h storage.h streams.h utils.h
 extensions.o: extensions.c bf_register.h functions.h my-stdio.h config.h \
  execute.h db.h program.h structures.h version.h opcode.h options.h \
  parse_cmd.h db_tune.h utils.h my-stdlib.h log.h

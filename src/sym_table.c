@@ -62,6 +62,8 @@ first_user_slot(DB_Version version)
 	
     if (version >= DBV_Hash)
 	count += 1;
+    if (version >= DBV_Waif)
+	count += 1;
 
     return count;
 }
@@ -101,6 +103,9 @@ new_builtin_names(DB_Version version)
 	
 	if (version >= DBV_Hash) {
 	    bi->names[SLOT_HASH] = str_dup("HASH");
+	}
+	if (version >= DBV_Waif) {
+ 	    bi->names[SLOT_WAIF] = str_dup("WAIF");
 	}
     }
     return copy_names(builtins[version]);

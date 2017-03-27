@@ -314,6 +314,9 @@ list2str(Var * args)
 	case TYPE_HASH:
 	    stream_add_string(str, "[hash]");
 	    break;
+	case TYPE_WAIF:
+	    stream_add_string(str, "{waif}");
+	    break;
 	default:
 	    panic("LIST2STR: Impossible var type.\n");
 	}
@@ -383,6 +386,10 @@ print_to_stream(Var v, Stream * s)
 	    }
 	    stream_add_char(s, '}');
 	}
+	break;
+    case TYPE_WAIF:
+	stream_printf(s, "[[class = #%d, owner = #%d]]",
+		v.v.waif->class, v.v.waif->owner);
 	break;
     case TYPE_HASH:
 	{

@@ -14,8 +14,8 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-CC = gcc  -std=gnu99
-LIBRARIES =  -lm -lcrypt
+CC = gcc -std=gnu99 -m32
+LIBRARIES =  -lm -lcrypt -lrt
 YACC = bison -y
 
 CFLAGS = -g
@@ -34,9 +34,10 @@ CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_verbs.c decompile.c disassemble.c eval_env.c eval_vm.c \
 	exceptions.c execute.c extensions.c functions.c keywords.c list.c hash_lookup.c hash.c \
 	log.c malloc.c match.c md5.c name_lookup.c network.c net_mplex.c \
-	net_proto.c numbers.c objects.c parse_cmd.c pattern.c pipe_utils.c profiler.c program.c \
+
+	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
 	property.c quota.c ref_count.c regexpr.c server.c storage.c streams.c str_intern.c \
-	sym_table.c tasks.c timers.c unparse.c utf8.c utils.c verbs.c version.c
+	sym_table.c tasks.c timers.c unparse.c utf8.c utils.c verbs.c version.c files.c waif.c pipe_utils.c profiler.c
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -55,7 +56,7 @@ HDRS =  ast.h bf_register.h code_gen.h db.h db_io.h db_private.h decompile.h \
 	options.h parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h regexpr.h server.h storage.h streams.h structures.h  str_intern.h \
 	sym_table.h tasks.h timers.h tokens.h unparse.h utils.h verbs.h \
-	version.h utf8.h
+	version.h utf8.h waif.h pipe_utils.h profiler.h
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \
@@ -112,10 +113,10 @@ config.h: config.h.in config.status
 	./config.status
 
 y.tab.h: parser.y
-	yacc -d parser.y
+	$(YACC) -d parser.y
 
 keywords.c: keywords.gperf
-	gperf -aCIptT -k1,3,$ keywords.gperf \
+	gperf -aCIptT -k1,3,$$ keywords.gperf \
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
 
@@ -358,12 +359,15 @@ eval_vm.o: eval_vm.c config.h db_io.h program.h structures.h my-stdio.h \
  version.h decompile.h ast.h parser.h sym_table.h eval_vm.h execute.h \
  db.h opcode.h options.h parse_cmd.h log.h storage.h ref_count.h tasks.h
 exceptions.o: exceptions.c exceptions.h config.h
-execute.o: execute.c my-string.h config.h my-time.h db.h program.h \
- structures.h my-stdio.h version.h db_io.h decompile.h ast.h parser.h \
- sym_table.h eval_env.h eval_vm.h execute.h opcode.h options.h \
- parse_cmd.h exceptions.h functions.h hash.h list.h log.h numbers.h \
- profiler.h server.h network.h storage.h ref_count.h streams.h tasks.h \
- timers.h utils.h my-stdlib.h utf8.h my-types.h
+execute.o: execute.c my-string.h config.h db.h program.h structures.h \
+ my-stdio.h version.h db_io.h decompile.h ast.h parser.h sym_table.h \
+ eval_env.h eval_vm.h execute.h opcode.h options.h parse_cmd.h \
+ exceptions.h functions.h hash.h list.h log.h numbers.h server.h \
+ network.h storage.h ref_count.h streams.h tasks.h timers.h my-time.h \
+ utils.h my-stdlib.h utf8.h my-types.h profiler.h
+files.o : files.c my-stdarg.h config.h functions.h my-stdio.h bf_register.h \
+  execute.h opcode.h options.h program.h structures.h log.h server.h \
+  network.h storage.h streams.h utils.h
 extensions.o: extensions.c bf_register.h functions.h my-stdio.h config.h \
  execute.h db.h program.h structures.h version.h opcode.h options.h \
  parse_cmd.h db_tune.h utils.h my-stdlib.h log.h

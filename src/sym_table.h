@@ -58,6 +58,9 @@ extern void free_names(Names *);
 /* Added in DBV_Hash:  */
 #define SLOT_HASH	18
 
+/* Added in DBV_Waif:  */
+#define SLOT_WAIF	19
+
 #endif				/* !Sym_Table_h */
 
 /* 
