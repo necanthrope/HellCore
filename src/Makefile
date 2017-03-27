@@ -14,13 +14,13 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-CC = gcc  -std=gnu99
+CC = gcc -std=gnu99 -m32
 LIBRARIES =  -lm -lcrypt -lrt
 YACC = bison -y
 
-# CFLAGS = -g
+CFLAGS = -g
 # If you're using GCC, you may prefer:
-CFLAGS = -O2 -finline-functions
+# CFLAGS = -O2 -finline-functions
 #
 # If you're not using GCC, and your compiler doesn't understand the
 # inline keyword, use the following.  (This will be fixed in autoconf2
@@ -34,10 +34,9 @@ CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	db_verbs.c decompile.c disassemble.c eval_env.c eval_vm.c \
 	exceptions.c execute.c extensions.c functions.c keywords.c list.c hash_lookup.c hash.c \
 	log.c malloc.c match.c md5.c name_lookup.c network.c net_mplex.c \
-	net_proto.c numbers.c objects.c parser.c parse_cmd.c pattern.c program.c profiler.c \
+	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
 	property.c quota.c ref_count.c regexpr.c server.c storage.c streams.c str_intern.c \
-	sym_table.c tasks.c timers.c unparse.c utils.c verbs.c version.c \
-	moomysql.c mysql_child.c serialize.c pipe_utils.c
+	sym_table.c tasks.c timers.c unparse.c utils.c verbs.c version.c files.c waif.c pipe_utils.c profiler.c
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -53,11 +52,10 @@ HDRS =  ast.h bf_register.h code_gen.h db.h db_io.h db_private.h decompile.h \
 	disassemble.h eval_env.h eval_vm.h exceptions.h execute.h functions.h hash_lookup.h \
 	getpagesize.h keywords.h list.h log.h match.h md5.h name_lookup.h hash.h \
 	network.h net_mplex.h net_multi.h net_proto.h numbers.h opcode.h \
-	options.h parse_cmd.h parser.h pattern.h program.h quota.h random.h profiler.h \
+	options.h parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h regexpr.h server.h storage.h streams.h structures.h  str_intern.h \
 	sym_table.h tasks.h timers.h tokens.h unparse.h utils.h verbs.h \
-	version.h \
-	moomysql.h mysql_child.h serialize.h pipe_utils.h
+	version.h waif.h pipe_utils.h profiler.h
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
 	my-poll.h my-signal.h my-socket.h my-stat.h my-stdarg.h my-stdio.h \
@@ -77,7 +75,9 @@ DISTFILES = $(SRCS) Makefile.in restart restart.sh \
 
 COBJS = $(CSRCS:.c=.o)
 
-OBJS = $(COBJS)
+YOBJS = $(YSRCS:.y=.o)
+
+OBJS = $(COBJS) $(YOBJS)
 
 moo:	$(OBJS)
 	$(CC) $(CFLAGS) $(OBJS) $(LIBRARIES) -o $@
@@ -112,10 +112,10 @@ config.h: config.h.in config.status
 	./config.status
 
 y.tab.h: parser.y
-	$(YACC) $(YFLAGS) parser.y
+	$(YACC) -d parser.y
 
-keywords.c: keywords.gperf parser.o
-	gperf --ignore-case -aCptT -k1,3,$$ keywords.gperf \
+keywords.c: keywords.gperf
+	gperf -aCIptT -k1,3,$$ keywords.gperf \
 		| sed -e 's/#include <ctype.h>/#include "my-ctype.h"/' \
 		> keywords.c
 
@@ -138,7 +138,7 @@ tags:
 	etags -t $(SRCS)
 
 clean:
-	rm -f $(OBJS) parser.c keywords.c core y.tab.c y.tab.h y.output makedep eddep 
+	rm -f $(OBJS) core y.tab.c y.tab.h y.output makedep eddep 
 
 distclean:	clean
 	rm -f config.h Makefile config.status
@@ -154,13 +154,7 @@ depend: ${ALL_CSRCS}
 	rm -f eddep makedep
 
 ###############################################################################
-# $Log: Makefile,v $
-# Revision 1.7  2010/05/16 02:39:54  blacklite
-# add new files to makefile
-#
-# Revision 1.6  2009/10/11 00:33:18  blacklite
-# update gcc flags (-O2 not -O3 for now), deps, add YSRCS
-#
+# $Log: Makefile.in,v $
 # Revision 1.4  2009/03/08 12:41:30  blacklite
 # Added HASH data type, yield keyword, MEMORY_TRACE, vfscanf(),
 # extra myrealloc() and memcpy() tricks for lists, Valgrind
@@ -367,6 +361,9 @@ execute.o: execute.c my-string.h config.h db.h program.h structures.h \
   exceptions.h functions.h hash.h list.h log.h numbers.h server.h \
   network.h storage.h ref_count.h streams.h tasks.h timers.h my-time.h \
   utils.h
+files.o : files.c my-stdarg.h config.h functions.h my-stdio.h bf_register.h \
+  execute.h opcode.h options.h program.h structures.h log.h server.h \
+  network.h storage.h streams.h utils.h
 extensions.o: extensions.c bf_register.h functions.h my-stdio.h config.h \
   execute.h db.h program.h structures.h version.h opcode.h options.h \
   parse_cmd.h db_tune.h utils.h

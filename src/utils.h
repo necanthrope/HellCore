@@ -59,6 +59,7 @@ check_var_sanity(Var v)
 	case TYPE_FLOAT:
 	case TYPE_LIST:
 	case TYPE_HASH:
+	case TYPE_WAIF:
 	case TYPE_ANY:
 	case TYPE_NUMERIC:
 	    break; /* ok */
