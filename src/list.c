@@ -37,6 +37,7 @@
 #include "unparse.h"
 #include "utils.h"
 #include "hash_lookup.h"
+#include "utf8.h"
 
 #define TRY_REALLOC_TRICKS 1
 
@@ -239,6 +240,30 @@ listrangeset(Var base, int from, int to, Var value)
     return ans;
 }
 
+char *
+strsetoctets(const char *base, const char *value, int from, int to)
+{
+       int index, offset = 0;
+       int val_len = strlen(value), base_len = strlen(base);
+       int lenleft = (from > 1) ? from - 1 : 0;
+       int lenmiddle = val_len;
+       int lenright = (base_len > to) ? base_len - to : 0;
+       int newsize = lenleft + lenmiddle + lenright;
+
+       char *s;
+
+       s = mymalloc(sizeof(char) * (newsize + 1), M_STRING);
+
+       for (index = 0; index < lenleft; index++)
+               s[offset++] = base[index];
+       for (index = 0; index < lenmiddle; index++)
+               s[offset++] = value[index];
+       for (index = 0; index < lenright; index++)
+               s[offset++] = base[index + to];
+       s[offset] = '\0';
+       return s;
+}
+
 Var
 sublist(Var list, int lower, int upper)
 {
@@ -413,33 +438,15 @@ value_to_literal(Var v)
 Var
 strrangeset(Var base, int from, int to, Var value)
 {
-    /* base and value are free'd */
-    int index, offset = 0;
-    int val_len = strlen(value.v.str);
-    int base_len = strlen(base.v.str);
-    int lenleft = (from > 1) ? from - 1 : 0;
-    int lenmiddle = val_len;
-    int lenright = (base_len > to) ? base_len - to : 0;
-    int newsize = lenleft + lenmiddle + lenright;
 
     Var ans;
-    char *s;
 
     ans.type = TYPE_STR;
-    s = mymalloc(sizeof(char) * (newsize + 1), M_STRING);
+		ans.v.str = utf8_strrangeset(base.v.str, from, to, value.v.str);
 
-    for (index = 0; index < lenleft; index++)
-	s[offset++] = base.v.str[index];
-    for (index = 0; index < lenmiddle; index++)
-	s[offset++] = value.v.str[index];
-    for (index = 0; index < lenright; index++)
-	s[offset++] = base.v.str[index + to];
-    s[offset] = '\0';
-    ans.v.str = s;
-    free_var(base);
-    free_var(value);
     return ans;
 }
+
 
 Var
 substr(Var str, int lower, int upper)
@@ -450,28 +457,39 @@ substr(Var str, int lower, int upper)
     if (lower > upper)
 	r.v.str = str_dup("");
     else {
-	int loop, index = 0;
-	char *s = mymalloc(upper - lower + 2, M_STRING);
-
-	for (loop = lower - 1; loop < upper; loop++)
-	    s[index++] = str.v.str[loop];
-	s[index] = '\0';
-	r.v.str = s;
+  r.v.str = utf8_substr(str.v.str, lower, upper);
     }
     free_var(str);
     return r;
 }
 
+char *
+stroctets(const char *str, int from, int to)
+{
+       char *s;
+       if (from > to || from > strlen(str) || from < 1)
+               s = str_dup("");
+       else {
+               int loop, index = 0;
+               s = mymalloc(to - from + 2, M_STRING);
+
+               for (loop = from - 1; loop < to; loop++)
+                       s[index++] = str[loop];
+               s[index] = '\0';
+       }
+
+       return s;
+}
+
+
 Var
 strget(Var str, Var i)
 {
     Var r;
-    char *s;
 
     r.type = TYPE_STR;
-    s = str_dup(" ");
-    s[0] = str.v.str[i.v.num - 1];
-    r.v.str = s;
+		r.v.str = utf8_index(str.v.str, i.v.num);
+
     return r;
 }
 
@@ -492,7 +510,7 @@ bf_length(Var arglist, Byte next, void *vdata, Objid progr)
 	break;
     case TYPE_STR:
 	r.type = TYPE_INT;
-	r.v.num = strlen(arglist.v.list[1].v.str);
+	r.v.num = utf8_strlen(arglist.v.list[1].v.str);
 	break;
     default:
 	free_var(arglist);
@@ -502,6 +520,99 @@ bf_length(Var arglist, Byte next, void *vdata, Objid progr)
 
     free_var(arglist);
     return make_var_pack(r);
+}
+
+static package
+bf_octets(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var r;
+
+       r.type = TYPE_INT;
+       r.v.num = strlen(arglist.v.list[1].v.str);
+       free_var(arglist);
+       return make_var_pack(r);
+}
+
+static package
+bf_getoctets(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var base = arglist.v.list[1], rv;
+       int to, from = arglist.v.list[2].v.num;
+
+       rv.type = TYPE_STR;
+
+       if (arglist.v.list[0].v.num > 2)
+               to = arglist.v.list[3].v.num;
+       else
+               to = strlen(base.v.str);
+
+       if (from < 1) {
+               free_var(arglist);
+               return make_error_pack(E_RANGE);
+       } else
+               rv.v.str = stroctets(base.v.str, from, to);
+
+       free_var(arglist);
+       return make_var_pack(rv);
+}
+
+static package
+bf_getoctet(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var base = arglist.v.list[1], rv;
+       int i = arglist.v.list[2].v.num;
+
+       rv.type = TYPE_STR;
+
+       if (i < 1 || i > strlen(base.v.str)) {
+               free_var(arglist);
+               return make_error_pack(E_RANGE);
+       } else
+               rv.v.str = stroctets(base.v.str, i, i);
+
+       free_var(arglist);
+       return make_var_pack(rv);
+}
+
+static package
+bf_setoctets(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var base = arglist.v.list[1], value = arglist.v.list[2], rv;
+       int from = arglist.v.list[3].v.num, to;
+
+       rv.type = TYPE_STR;
+
+       if (arglist.v.list[0].v.num > 3)
+               to = arglist.v.list[4].v.num;
+       else
+               to = strlen(base.v.str);
+
+       if (from < 1 || from > strlen(base.v.str) + 1) {
+               free_var(arglist);
+               return make_error_pack(E_RANGE);
+       } else
+               rv.v.str = strsetoctets(base.v.str, value.v.str, from, to);
+
+       free_var(arglist);
+       return make_var_pack(rv);
+}
+
+static package
+bf_setoctet(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var base = arglist.v.list[1], value = arglist.v.list[2], rv;
+       int i = arglist.v.list[3].v.num;
+
+       rv.type = TYPE_STR;
+
+       if (i < 1 || i > strlen(base.v.str) + 1) {
+               free_var(arglist);
+               return make_error_pack(E_RANGE);
+       } else
+               rv.v.str = strsetoctets(base.v.str, value.v.str, i, i);
+
+       free_var(arglist);
+       return make_var_pack(rv);
 }
 
 static package
@@ -685,7 +796,7 @@ bf_index(Var arglist, Byte next, void *vdata, Objid progr)
     if (arglist.v.list[0].v.num == 3)
 	case_matters = is_true(arglist.v.list[3]);
     r.type = TYPE_INT;
-    r.v.num = strindex(arglist.v.list[1].v.str, arglist.v.list[2].v.str,
+    r.v.num = utf8_strindex(arglist.v.list[1].v.str, arglist.v.list[2].v.str,
 		       case_matters);
 
     free_var(arglist);
@@ -702,7 +813,7 @@ bf_rindex(Var arglist, Byte next, void *vdata, Objid progr)
     if (arglist.v.list[0].v.num == 3)
 	case_matters = is_true(arglist.v.list[3]);
     r.type = TYPE_INT;
-    r.v.num = strrindex(arglist.v.list[1].v.str, arglist.v.list[2].v.str,
+    r.v.num = utf8_strrindex(arglist.v.list[1].v.str, arglist.v.list[2].v.str,
 			case_matters);
 
     free_var(arglist);
@@ -823,16 +934,16 @@ do_match(Var arglist, int reverse)
 	    ans.v.list[1].type = TYPE_INT;
 	    ans.v.list[2].type = TYPE_INT;
 	    ans.v.list[4].type = TYPE_STR;
-	    ans.v.list[1].v.num = regs[0].start;
-	    ans.v.list[2].v.num = regs[0].end;
+			ans.v.list[1].v.num = utf8_convert_index(regs[0].start, subject);
+			ans.v.list[2].v.num = (regs[0].end == 0 ? 0 : utf8_convert_index(regs[0].end, subject)); 
 	    ans.v.list[3] = new_list(9);
 	    ans.v.list[4].v.str = str_ref(subject);
 	    for (i = 1; i <= 9; i++) {
 		ans.v.list[3].v.list[i] = new_list(2);
 		ans.v.list[3].v.list[i].v.list[1].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[1].v.num = regs[i].start;
+		ans.v.list[3].v.list[i].v.list[1].v.num = (regs[i].start == 0 ? 0 : utf8_convert_index(regs[i].start, subject));
 		ans.v.list[3].v.list[i].v.list[2].type = TYPE_INT;
-		ans.v.list[3].v.list[i].v.list[2].v.num = regs[i].end;
+		ans.v.list[3].v.list[i].v.list[2].v.num = (regs[i].end <= 0 ? regs[i].end : utf8_convert_index(regs[i].end, subject));
 	    }
 	    break;
 	case MATCH_FAILED:
@@ -1261,6 +1372,94 @@ bf_map(Var arglist, Byte next, void *vdata, Objid progr)
     return p;
 }
 
+/* Character manipulation/conversion */
+
+static package
+bf_ucs4(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var v;
+
+    if (0 == arglist.v.list[1].v.str[0]) {
+               /* empty string */
+               free_var(arglist);
+               return make_raise_pack(E_INVARG, "Empty String", zero);
+       }
+       v.type = TYPE_INT;
+       v.v.num = utf8_to_ucs4((char *) arglist.v.list[1].v.str);
+       free_var(arglist);
+       if (v.v.num < 0)
+               return make_error_pack(E_INVARG);
+       return make_var_pack(v);
+}
+
+static package
+bf_asc(Var arglist, Byte next, void *vdata, Objid progr)
+{      // bf_ucs4, but raises E_INVARG if over 255
+       Var v;
+
+    if (0 == arglist.v.list[1].v.str[0]) {
+               /* empty string */
+               free_var(arglist);
+               return make_raise_pack(E_INVARG, "Empty String", zero);
+       }
+       v.type = TYPE_INT;
+       v.v.num = utf8_to_ucs4((char *) arglist.v.list[1].v.str);
+       free_var(arglist);
+       if (v.v.num < 0 || v.v.num > 255)
+               return make_error_pack(E_INVARG);
+       return make_var_pack(v);
+}
+
+static package
+bf_octet_int(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var v;
+
+    if (0 == arglist.v.list[1].v.str[0]) {
+               /* empty string */
+               free_var(arglist);
+               return make_raise_pack(E_INVARG, "Empty String", zero);
+       }
+       v.type = TYPE_INT;
+    v.v.num = (unsigned char) arglist.v.list[1].v.str[0];
+    free_var(arglist);
+    return make_var_pack(v);
+}
+
+static package
+bf_chr(Var arglist, Byte next, void *vdata, Objid progr)
+{
+       Var v;
+
+       if (0 > arglist.v.list[1].v.num) {
+               free_var(arglist);
+               return make_error_pack(E_RANGE);
+       }
+       v.type = TYPE_STR;
+       v.v.str = ucs4_to_utf8(arglist.v.list[1].v.num);
+       free_var(arglist);
+       return make_var_pack(v);
+}
+
+static package
+bf_octet_str(Var arglist, Byte next, void *vdata, Objid progr)
+{
+    Var v;
+
+    if (arglist.v.list[1].v.num < 1 ||
+        arglist.v.list[1].v.num > 0xFF) {
+       /* not an integer in valid ASCII range */
+        free_var(arglist);
+        return make_error_pack(E_INVARG);
+    }
+    v.type = TYPE_STR;
+    v.v.str = (char *) mymalloc(2, M_STRING);
+    ((char *) v.v.str)[0] = arglist.v.list[1].v.num;
+    ((char *) v.v.str)[1] = 0;
+    free_var(arglist);
+    return make_var_pack(v);
+}
+
 void
 register_list(void)
 {
@@ -1271,6 +1470,12 @@ register_list(void)
     register_function("decode_binary", 1, 2, bf_decode_binary,
 		      TYPE_STR, TYPE_ANY);
     register_function("encode_binary", 0, -1, bf_encode_binary);
+    register_function("octets", 1, 1, bf_octets, TYPE_STR);
+    register_function("getoctets", 2, 3, bf_getoctets, TYPE_STR, TYPE_INT, TYPE_INT);
+    register_function("getoctet", 2, 2, bf_getoctet, TYPE_STR, TYPE_INT);
+    register_function("setoctets", 3, 4, bf_setoctets, TYPE_STR, TYPE_STR, TYPE_INT, TYPE_INT);
+    register_function("setoctet", 3, 3, bf_setoctet, TYPE_STR, TYPE_STR, TYPE_INT);
+
     /* list */
     register_function("length", 1, 1, bf_length, TYPE_ANY);
     register_function("setadd", 2, 2, bf_setadd, TYPE_LIST, TYPE_ANY);
@@ -1298,6 +1503,12 @@ register_list(void)
     register_function("strcmp", 2, 2, bf_strcmp, TYPE_STR, TYPE_STR);
     register_function("strsub", 3, 4, bf_strsub,
 		      TYPE_STR, TYPE_STR, TYPE_STR, TYPE_ANY);
+    /* character */
+    register_function("ucs4", 1, 1, bf_ucs4, TYPE_STR);
+    register_function("asc", 1, 1, bf_asc, TYPE_STR);
+    register_function("octet_int", 1, 1, bf_octet_int, TYPE_STR);
+    register_function("chr", 1, 1, bf_chr, TYPE_INT);
+    register_function("octet_str", 1, 1, bf_octet_str, TYPE_INT);
 }
 
 

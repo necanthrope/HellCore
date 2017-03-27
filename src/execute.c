@@ -49,6 +49,7 @@
 #include "utils.h"
 #include "waif.h"
 #include "version.h"
+#include "utf8.h"
 
 /* the following globals are the guts of the virtual machine: */
 static activation *activ_stack = 0;
@@ -1142,12 +1143,12 @@ do {    						    	\
 			   || (list.type == TYPE_LIST
 		       && index.v.num > list.v.list[0].v.num /* size */ )
 			   || (list.type == TYPE_STR
-			    && index.v.num > (int) strlen(list.v.str))) {
+			    && index.v.num > (int) utf8_strlen(list.v.str))) {
 		    free_var(value);
 		    free_var(index);
 		    free_var(list);
 		    PUSH_ERROR(E_RANGE);
-		} else if (list.type == TYPE_STR && strlen(value.v.str) != 1) {
+		} else if (list.type == TYPE_STR && utf8_strlen(value.v.str) != 1) {
 		    free_var(value);
 		    free_var(index);
 		    free_var(list);
@@ -1163,10 +1164,18 @@ do {    						    	\
 		    }
 		    PUSH(listset(res, value, index.v.num));
 		} else {	/* TYPE_STR */
+				/*
 		    char *tmp_str = str_dup(list.v.str);
 		    free_str(list.v.str);
 		    tmp_str[index.v.num - 1] = value.v.str[0];
 		    list.v.str = tmp_str;
+				*/
+
+        char* tmp_str = str_dup(list.v.str);
+        free_str(list.v.str);
+        list.v.str = utf8_copyandset(tmp_str, index.v.num, value.v.str);
+        free_str(tmp_str);
+
 		    free_var(value);
 		    PUSH(list);
 		}

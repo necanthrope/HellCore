@@ -36,7 +36,7 @@ CSRCS = ast.c code_gen.c db_file.c db_io.c db_objects.c db_properties.c \
 	log.c malloc.c match.c md5.c name_lookup.c network.c net_mplex.c \
 	net_proto.c numbers.c objects.c parse_cmd.c pattern.c program.c \
 	property.c quota.c ref_count.c regexpr.c server.c storage.c streams.c str_intern.c \
-	sym_table.c tasks.c timers.c unparse.c utils.c verbs.c version.c files.c waif.c pipe_utils.c profiler.c
+	sym_table.c tasks.c timers.c unparse.c utf8.c utils.c verbs.c version.c files.c waif.c pipe_utils.c profiler.c
 
 OPT_NET_SRCS = net_single.c net_multi.c \
 	net_mp_selct.c net_mp_poll.c net_mp_fake.c \
@@ -54,7 +54,7 @@ HDRS =  ast.h bf_register.h code_gen.h db.h db_io.h db_private.h decompile.h \
 	network.h net_mplex.h net_multi.h net_proto.h numbers.h opcode.h \
 	options.h parse_cmd.h parser.h pattern.h program.h quota.h random.h \
 	ref_count.h regexpr.h server.h storage.h streams.h structures.h  str_intern.h \
-	sym_table.h tasks.h timers.h tokens.h unparse.h utils.h verbs.h \
+	sym_table.h tasks.h timers.h tokens.h unparse.h utf8.h utils.h verbs.h \
 	version.h waif.h pipe_utils.h profiler.h
 
 SYSHDRS = my-ctype.h my-fcntl.h my-in.h my-inet.h my-ioctl.h my-math.h \
@@ -360,7 +360,7 @@ execute.o: execute.c my-string.h config.h db.h program.h structures.h \
   eval_env.h eval_vm.h execute.h opcode.h options.h parse_cmd.h \
   exceptions.h functions.h hash.h list.h log.h numbers.h server.h \
   network.h storage.h ref_count.h streams.h tasks.h timers.h my-time.h \
-  utils.h
+  utf8.h utils.h
 files.o : files.c my-stdarg.h config.h functions.h my-stdio.h bf_register.h \
   execute.h opcode.h options.h program.h structures.h log.h server.h \
   network.h storage.h streams.h utils.h
@@ -454,6 +454,8 @@ unparse.o: unparse.c my-ctype.h config.h my-stdio.h ast.h parser.h \
   program.h structures.h version.h sym_table.h decompile.h exceptions.h \
   functions.h execute.h db.h opcode.h options.h parse_cmd.h keywords.h \
   list.h log.h unparse.h storage.h ref_count.h streams.h utils.h
+utf8.o: utf8.c utf8.h my-types.h config.h storage.h structures.h \
+  my-stdio.h ref_count.h
 utils.o: utils.c my-ctype.h config.h my-stdio.h my-string.h db.h \
   program.h structures.h version.h db_io.h exceptions.h list.h log.h \
   match.h numbers.h ref_count.h server.h network.h options.h storage.h \
