@@ -32,7 +32,7 @@
 #include "match.h"
 #include "options.h"
 #include "parse_cmd.h"
-#include "parserdefs.h"
+#include "parser.h"
 #include "random.h"
 #include "server.h"
 #include "storage.h"

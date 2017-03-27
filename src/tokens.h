@@ -20,7 +20,7 @@
 #include "ast.h"
 #include "structures.h"
 
-#include "parser.h"
+#include "y.tab.h"
 
 #endif
 
