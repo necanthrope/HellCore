@@ -43,6 +43,8 @@
 #include "sym_table.h"
 #include "utils.h"
 #include "version.h" 
+#include "waif.h" 
+#include "utf8.h" 
 
 static Stmt    	       *prog_start;
 static int		dollars_ok;
