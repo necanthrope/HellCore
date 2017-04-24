@@ -26,7 +26,7 @@
 #include "log.h"
 #include "match.h"
 #include "parse_cmd.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "server.h"
 #include "storage.h"
 #include "unparse.h"

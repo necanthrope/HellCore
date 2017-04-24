@@ -1,0 +1,13 @@
+# This file will tell Git to ignore temporary and generated files.
+
+# This should only be needed to add to or override the top-level .gitignore.
+
+# Ignore generated programs.
+moo
+
+# Ignore source files which are generated automatically.
+keywords-s.c
+keywords.c
+parser.c
+parser.h
+version.c

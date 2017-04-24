@@ -32,7 +32,7 @@
 #include "hash.h"
 #include "log.h"
 #include "numbers.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "storage.h"
 #include "streams.h"
 #include "structures.h"

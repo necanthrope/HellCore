@@ -19,7 +19,7 @@
 #define AST_h 1
 
 #include "config.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "structures.h"
 #include "sym_table.h"
 
