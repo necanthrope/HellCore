@@ -60,6 +60,7 @@ EXTRA_moo_SOURCES = client_bsd.c client_sysv.c gnu-malloc.c net_bsd_lcl.c \
 
 # These sources are auto-generated, and shouldn't be distributed automatically.
 nodist_moo_SOURCES = keywords-s.c
+DISTCLEANFILES = keywords-s.c
 
 
 # All of the headers.
