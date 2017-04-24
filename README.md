@@ -1,9 +1,19 @@
 # HellCore
 Source code for the HellCore project, a fork of LambdaMOO.
 
-## Known dependencies:
-* libstdc++
+## Dependencies:
+
+* autoconf
+* automake
+* bison
+* gcc
 * gperf
+* libstdc++
+* make
+* sed
+
+If you are unable to build despite having working and recent versions of these
+installed, please file a bug report on this repository.
 
 ## README
 
@@ -12,19 +22,38 @@ deleted tons of Hell-specific objects and verbs. I might have deleted useful
 stuff, I more than likely left references to useless/deleted props/objects all
 over the place.
 
-To start it, you will need to run something like this:
-> ./moo -l moo.log hellcore.db hell.db.test 7777
-> (./moo -l <logfile> <original DB> <new DB> <port>)
+Before you start the server, read the section on building it.
 
-or just:
+To start it, you can run
+```shell
+./restart hellcore
+```
 
-> ./restart hellcore
+You can also start it with something like this:
+```shell
+./moo -l moo.log hellcore.db hell.db.test 7777
+```
+
+```
+(./moo -l <logfile> <original DB> <new DB> <port>)
+```
 
 You should be able to login with 'connect Wizard', then change your password.
 
 ### Building
 
-Simply change to the src directory, and type 'make'.  This should build the moo binary.
+Simply run
+```shell
+./build.sh
+```
+
+The moo binary will be located as `src/moo`.
+
+If you are familiar with the standard Linux/Unix build process, you can instead
+run
+```shell
+./autogen.sh && ./configure && make
+```
 
 ### USE AT YOUR OWN RISK. I DENY RESPONSIBILITY FOR:
 * Spontaneous hairy nose
@@ -36,5 +65,4 @@ Simply change to the src directory, and type 'make'.  This should build the moo 
 
 Cheers,
 
-Senso/Dionysus, Necanthrope
-
+Senso/Dionysus, Necanthrope, diatomic.ge

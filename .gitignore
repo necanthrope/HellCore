@@ -1,2 +1,22 @@
+# This file will tell Git to ignore temporary and generated files.
+
+# Ignore all compiled object files.
 *.o
 
+# Ignore the files generated or added automatically by the build system.
+.deps/
+Makefile
+Makefile.in
+aclocal.m4
+autom4te.cache/
+compile
+config.log
+config.status
+configure
+depcomp
+install-sh
+missing
+ylwrap
+
+# Ignore the generated tree tarballs.
+hellcore-*.tar.*

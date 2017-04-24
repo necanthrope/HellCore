@@ -18,7 +18,7 @@
 #include "ast.h"
 #include "exceptions.h"
 #include "list.h"
-#include "parser.h"
+#include "parserdefs.h"
 #include "program.h"
 #include "storage.h"
 #include "structures.h"
