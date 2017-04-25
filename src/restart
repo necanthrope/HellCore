@@ -25,7 +25,7 @@ MOO="$(dirname "$0")/moo"
 # - $1: Optional. If "full", print a full help message with descriptions.
 #                 If "hint", tell the user to run with the help flag.
 usage() {
-  echo "Usage: ${0} [-h] [-n] dbase-prefix [port]"
+  echo "Usage: ${0} [-h] [-f] dbase-prefix [port]"
 
   if [ "x${1}" = "xfull" ]
   then
