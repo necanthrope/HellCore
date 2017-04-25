@@ -15,44 +15,193 @@
 #   Palo Alto, CA 94304
 #   Pavel@Xerox.Com
 
-if [ $# -lt 1 -o $# -gt 2 ]; then
-	echo 'Usage: restart dbase-prefix [port]'
-	exit 1
-fi
-
-if [ ! -r $1.db ]; then
-	echo "Unknown database: $1.db"
-	exit 1
-fi
-
-if [ -r $1.db.new ]; then
-	echo "Shuffling databases..."
-	mv -v $1.db $1.db.old
-	mv -v $1.db.new $1.db
-	rm -fv $1.db.old.gz
-	echo "$1.db.old will be gzipping in the background."
-	gzip $1.db.old &
-fi
-
-if [ -f $1.log ]; then
-	echo "$1.log moved temporarily to $1.log.old"
-	cat $1.log >> $1.log.old
-	rm $1.log
-fi
-
-echo `date`: RESTARTED >> $1.log
-echo "Restarting with $1.db, dumping to $1.db.new and logging to $1.log"
 
 # Make sure we find moo, no matter how this script is called.
 MOO="$(dirname "$0")/moo"
 
-nohup "$MOO" $1.db $1.db.new $2 >> $1.log 2>&1 &
 
-if [ -f $1.log.old ]; then
-	echo "Now gzipping $1.log.old"
-	gzip $1.log.old
-	mv -v $1.log.old.gz $1.log.`date | awk '{ print $6 $2 $3 }'`.gz
+# Display the script help.
+# Arguments:
+# - $1: Optional. If "full", print a full help message with descriptions.
+#                 If "hint", tell the user to run with the help flag.
+usage() {
+  echo "Usage: ${0} [-h] [-n] dbase-prefix [port]"
+
+  if [ "x${1}" = "xfull" ]
+  then
+    # Print a full description of everything.
+    echo "(Re)start the HellCore server in the background."
+    echo "dbase-prefix is the path to the database, minus the ending .db."
+    echo "port is the port to listen on, and defaults to 7777."
+    echo "Example: ${0} hellcore 7777"
+    echo
+    echo "Options:"
+    echo "  -h  Show this help message"
+    echo "  -f  Run the HellCore server in the foreground."
+  elif [ "x${1}" = "xhint" ]
+  then
+    echo "Try '${0} -h' for for more information."
+  fi
+}
+
+
+# Parse the script arguments.
+# This will parse the script arguments and set variables as appropriate.
+# Arguments:
+# - $@: The arguments to the script.
+parseargs() {
+  # This uses getopts to parse out options.
+  # Check out the getopt and getopts man pages and documentation for details on
+  # how to work with it.
+
+  # The options we understand.
+  OPTIONS=":hf"
+
+  # Loop, parsing options.
+  while getopts "${OPTIONS}" opt
+  do
+    case "${opt}" in
+      h)
+        # Print help and exit.
+        usage full
+        exit
+        ;;
+
+      f)
+        # Don't background HellCore.
+        FOREGROUND="yes"
+        ;;
+
+      *)
+        # Unrecognized option.
+        usage hint
+        exit 1
+        ;;
+    esac
+  done
+
+  # Remove the flags we just parsed.
+  shift "$((OPTIND - 1))"
+
+  # The remaining arguments should be our positional arguments.
+  # We should have only one or two, otherwise, print usage and fail.
+  if [ "$#" -lt 1 -o "$#" -gt 2 ]
+  then
+    usage hint
+    exit 1
+  fi
+
+  DBPREFIX="${1}"
+
+  if [ "${#}" -eq 2 ]
+  then
+    PORT="${2}"
+  else
+    PORT="7777"
+  fi
+}
+
+
+# Prepare the database.
+# Check that the database exists, and backup the database and log.
+# If the database doesn't exist, die.
+# Variables:
+#   $DBPREFIX:   The database prefix (without the trailing .db).
+#                (Set by parseargs)
+#   $FOREGROUND: If set to "yes", gzipping will be done verbosely in the
+#                foreground instead of in the background.
+prepdatabase() {
+  # Make sure the database actually exists.
+  if [ ! -r "${DBPREFIX}.db" ]
+  then
+    echo "Unknown database: ${DBPREFIX}.db"
+    exit 1
+  fi
+
+  # If there's a new database, backup the current one and replace it with the
+  # new one.
+  if [ -r "${DBPREFIX}.db.new" ]
+  then
+    echo "Shuffling databases..."
+    mv -v "${DBPREFIX}.db" "${DBPREFIX}.db.old"
+    mv -v "${DBPREFIX}.db.new" "${DBPREFIX}.db"
+    rm -fv "${DBPREFIX}.db.old.gz"
+
+    # Compress the old database.
+    if [ "x${FOREGROUND}" = "xyes" ]
+    then
+      # Compress in the foreground.
+      gzip -v "${DBPREFIX}.db.old"
+    else
+      # Compress in the background.
+      echo "${DBPREFIX}.db.old will be gzipping in the background."
+      gzip "${DBPREFIX}.db.old" &
+    fi
+  fi
+
+  # Backup the log file.
+  if [ -f "${DBPREFIX}.log" ]
+  then
+    echo "${DBPREFIX}.log moved temporarily to ${DBPREFIX}.log.old"
+    cat "${DBPREFIX}.log" >> "${DBPREFIX}.log.old"
+    rm "${DBPREFIX}.log"
+  fi
+
+  # Initialize the new log file.
+  echo "$(date): RESTARTED" >> "${DBPREFIX}.log"
+  echo "Restarting with ${DBPREFIX}.db, dumping to ${DBPREFIX}.db.new " \
+    "and logging to ${DBPREFIX}.log"
+}
+
+
+# Compress the old log, if it exists.
+# If we're working in the foreground, this should be done before starting
+# HellCore, since we have do do things in sequence for clarity.
+# Otherwise, it should be done after HellCore is started in the background.
+# Variables:
+#   $DBPREFIX:   The database prefix (without the trailing .db).
+#                (Set by parseargs)
+#   $FOREGROUND: If "yes", compres verbosely.
+compresslog() {
+  if [ -f "${DBPREFIX}.log.old" ]
+  then
+    echo "Now gzipping ${DBPREFIX}.log.old"
+
+    if [ "x${FOREGROUND}" = "xyes" ]
+    then
+      gzip -v "${DBPREFIX}.log.old"
+    else
+      gzip "${DBPREFIX}.log.old"
+    fi
+
+    OLDLOG="${DBPREFIX}.log.$(date | awk '{ print $6 $2 $3 }').gz"
+    mv -v "${DBPREFIX}.log.old.gz" "${OLDLOG}"
+  fi
+}
+
+
+# First, parse our script arguments.
+parseargs "${@}"
+
+# Then, prepare the database.
+prepdatabase
+
+# If we're running in the foreground, gzip up our old log first verbosely, so
+# the user can see it, then run moo in the foreground.
+# (We run moo through tee, so it's logged to the screen and log file.)
+# Otherwise, start up moo in the background, and quietly start gzipping the logs
+# here.
+if [ "x${FOREGROUND}" = "xyes" ]
+then
+  compresslog
+  "${MOO}" "${DBPREFIX}.db" "${DBPREFIX}.db.new" "${PORT}" 2>&1 \
+    | tee "${DBPREFIX}.log"
+else
+  nohup "${MOO}" "${DBPREFIX}.db" "${DBPREFIX}.db.new" "${PORT}" \
+    >> "${DBPREFIX}.log" 2>&1 &
+  compresslog
 fi
+
 
 ###############################################################################
 # $Log: restart,v $
