@@ -85,7 +85,7 @@ parseargs() {
 
   # The remaining arguments should be our positional arguments.
   # We should have only one or two, otherwise, print usage and fail.
-  if [ "$#" -lt 1 -o "$#" -gt 2 ]
+  if [ "$#" -lt 1 ] || [ "$#" -gt 2 ]
   then
     usage hint
     exit 1
