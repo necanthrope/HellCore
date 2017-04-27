@@ -7,7 +7,7 @@
 
 #ifdef VALGRIND
 #include <valgrind/memcheck.h>
-#endif VALGRIND
+#endif /* VALGRIND */
 
 struct intern_entry {
     const char *s;
