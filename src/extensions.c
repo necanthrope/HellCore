@@ -52,6 +52,9 @@
 #include "functions.h"
 #include "db_tune.h"
 #include <stdio.h>
+#include "my-string.h"
+#include "my-sys-time.h"
+#include "storage.h"
 
 typedef struct {
    uchar data[64];

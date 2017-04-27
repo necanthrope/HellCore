@@ -18,6 +18,7 @@
 #include "ast.h"
 #include "exceptions.h"
 #include "list.h"
+#include "my-string.h"
 #include "parserdefs.h"
 #include "program.h"
 #include "storage.h"

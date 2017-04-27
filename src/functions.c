@@ -23,6 +23,7 @@
 #include "functions.h"
 #include "list.h"
 #include "log.h"
+#include "my-string.h"
 #include "server.h"
 #include "storage.h"
 #include "streams.h"
