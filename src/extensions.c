@@ -131,7 +131,7 @@ void sha256_init(SHA256_CTX *ctx)
    ctx->state[7] = 0x5be0cd19;
 }
 
-void sha256_update(SHA256_CTX *ctx, uchar data[], ulint len)
+void sha256_update(SHA256_CTX *ctx, const uchar data[], ulint len)
 {
    ulint t,i;
 
