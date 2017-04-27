@@ -22,7 +22,7 @@
 #include "streams.h"
 
 static Stream *stream;
-static char *current_s;
+static const char *current_s;
 static int serialize_error;
 
 char *
@@ -212,7 +212,7 @@ srl_write_var(Var v)
 	}
 }
 
-char *
+const char *
 serialize(Var v)
 {
 	stream = new_stream(128);

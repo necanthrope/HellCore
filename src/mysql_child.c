@@ -95,7 +95,7 @@ do_mysql_comms(int to_server, int from_server)
 	struct sql_request req;
 	static char *buffer = 0;
 	static int buflen = 0;
-	static char *serial;
+	static const char *serial;
 	Timer_ID id;
 	Var args;
 	Var result;
