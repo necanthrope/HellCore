@@ -1,4 +1,5 @@
 #include "my-stdlib.h"
+#include "my-string.h"
 
 #include "log.h"
 #include "storage.h"
@@ -7,7 +8,7 @@
 
 #ifdef VALGRIND
 #include <valgrind/memcheck.h>
-#endif VALGRIND
+#endif /* VALGRIND */
 
 struct intern_entry {
     const char *s;

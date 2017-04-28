@@ -166,7 +166,7 @@ extern Exception dbpriv_dbio_failed;
 extern void dbpriv_set_dbio_input(FILE *);
 extern void dbpriv_set_dbio_output(FILE *);
 
-#endif DB_PRIVATE_h
+#endif /* DB_PRIVATE_h */
 
 /* 
  * $Log: db_private.h,v $

@@ -22,6 +22,7 @@
 #include "my-stat.h"
 #include "my-stdio.h"
 #include "my-stdlib.h"
+#include "my-string.h"
 
 #include "config.h"
 #include "db.h"
