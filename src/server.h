@@ -161,7 +161,7 @@ extern void boot_player(Objid player);
 extern void write_active_connections(void);
 extern int read_active_connections(void);
 
-FILE  *Dev_Random;  /* Global file pointer for /dev/random */
+extern FILE  *Dev_Random;  /* Global file pointer for /dev/random */
 
 #endif				/* Server_H */
 

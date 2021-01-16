@@ -680,7 +680,7 @@ bf_random(Var arglist, Byte next, void *vdata, Objid progr)
 
 int mels_random()
 {
-   extern FILE *Dev_Random;
+   FILE *Dev_Random;
    int result;
    char buf[5]; 
    /* read 4 bytes from /dev/urandom */
