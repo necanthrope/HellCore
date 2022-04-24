@@ -45,22 +45,6 @@ enum error {
     E_RECMOVE, E_MAXREC, E_RANGE, E_ARGS, E_NACC, E_INVARG, E_QUOTA, E_FLOAT
 };
 
-/* Do not reorder or otherwise modify this list, except to add new elements at
- * the end, since the order here defines the numeric equivalents of the type
- * values, and those equivalents are both DB-accessible knowledge and stored in
- * raw form in the DB.
- */
-typedef enum {
-    TYPE_INT, TYPE_OBJ, _TYPE_STR, TYPE_ERR, _TYPE_LIST, /* user-visible */
-    TYPE_CLEAR,			/* in clear properties' value slot */
-    TYPE_NONE,			/* in uninitialized MOO variables */
-    TYPE_CATCH,			/* on-stack marker for an exception handler */
-    TYPE_FINALLY,		/* on-stack marker for a TRY-FINALLY clause */
-    _TYPE_FLOAT,		/* floating-point number; user-visible */
-    _TYPE_HASH,			/* user-visible */
-    _TYPE_WAIF			/* lightweight object; user-visible */
-} var_type;
-
 /* Types which have external data should be marked with the TYPE_COMPLEX_FLAG
  * so that free_var/var_ref/var_dup can recognize them easily.  This flag is
  * only set in memory.  The original _TYPE values are used in the database
@@ -71,14 +55,36 @@ typedef enum {
 #define TYPE_DB_MASK		0x7f
 #define TYPE_COMPLEX_FLAG	0x80
 
-#define TYPE_STR		(_TYPE_STR | TYPE_COMPLEX_FLAG)
-#define TYPE_FLOAT		(_TYPE_FLOAT | TYPE_COMPLEX_FLAG)
-#define TYPE_LIST		(_TYPE_LIST | TYPE_COMPLEX_FLAG)
-#define TYPE_HASH		(_TYPE_HASH | TYPE_COMPLEX_FLAG)
-#define TYPE_WAIF		(_TYPE_WAIF | TYPE_COMPLEX_FLAG)
+/* Do not reorder or otherwise modify this list, except to add new elements at
+ * the end, since the order here defines the numeric equivalents of the type
+ * values, and those equivalents are both DB-accessible knowledge and stored in
+ * raw form in the DB.
+ */
+typedef enum {
+    TYPE_INT, TYPE_OBJ, _TYPE_STR, TYPE_ERR, _TYPE_LIST, /* user-visible */
+    TYPE_CLEAR,                 /* in clear properties' value slot */
+    TYPE_NONE,                  /* in uninitialized MOO variables */
+    TYPE_CATCH,                 /* on-stack marker for an exception handler */
+    TYPE_FINALLY,               /* on-stack marker for a TRY-FINALLY clause */
+    _TYPE_FLOAT,                /* floating-point number; user-visible */
+    _TYPE_HASH,                 /* user-visible */
+    _TYPE_WAIF,                 /* lightweight object; user-visible */
 
-#define TYPE_ANY ((var_type) -1)	/* wildcard for use in declaring built-ins */
-#define TYPE_NUMERIC ((var_type) -2)	/* wildcard for (integer or float) */
+    /* These used to be #defines, but placing them here lets more modern
+     * compilers to check that they're used properly, since they're used as
+     * variable types in code.
+     * It also silences a bunch of warnings.
+     */
+    TYPE_STR = (_TYPE_STR | TYPE_COMPLEX_FLAG),
+    TYPE_FLOAT = (_TYPE_FLOAT | TYPE_COMPLEX_FLAG),
+    TYPE_LIST = (_TYPE_LIST | TYPE_COMPLEX_FLAG),
+    TYPE_HASH = (_TYPE_HASH | TYPE_COMPLEX_FLAG),
+    TYPE_WAIF = (_TYPE_WAIF | TYPE_COMPLEX_FLAG),
+    TYPE_ANY = -1,              /* wildcard for use in declaring built-ins */
+    TYPE_NUMERIC = -2           /* wildcard for (integer or float) */
+} var_type;
+
+
 
 typedef struct Var Var;
 
@@ -146,7 +152,7 @@ extern Var zero;		/* useful constant */
 
 #endif				/* !Structures_h */
 
-/* 
+/*
  * $Log: structures.h,v $
  * Revision 1.6  2010/05/16 02:41:03  blacklite
  * Add new first/last_in, first/last_contents builtins and remove outdated TOMB constant. v1.10.4
@@ -168,7 +174,7 @@ extern Var zero;		/* useful constant */
  *
  * Revision 1.3  1997/07/07 03:24:55  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.2.2.2  1997/05/23 07:01:30  nop
  * Added experimental support for 32-bit pointer model on Alpha with DEC cc.
  *
