@@ -1144,9 +1144,9 @@ ref_size(unsigned max)
 
 #ifdef BYTECODE_REDUCE_REF
 static int
-bbd_cmp(int *a, int *b)
+bbd_cmp(const void *a, const void *b)
 {
-	return *a - *b;
+	return *((int*) a) - *((int*) b);
 }
 #endif /* BYTECODE_REDUCE_REF */
 
@@ -1373,7 +1373,7 @@ generate_code(Stmt * stmt, DB_Version version)
 
 char rcsid_code_gen[] = "$Id: code_gen.c,v 1.5 2009/03/27 20:26:48 blacklite Exp $";
 
-/* 
+/*
  * $Log: code_gen.c,v $
  * Revision 1.5  2009/03/27 20:26:48  blacklite
  * add optional argument to YIELD statement, make no-arg version into YIELD0 expression/op. add newer ops/exprs to disassembly. handle PF_PRIVATE in execute. make some vars 'register' in execute.
