@@ -24,3 +24,6 @@ ylwrap
 
 # Ignore the generated tree tarballs.
 hellcore-*.tar.*
+
+# Ignore logs created when running the MOO.
+*.log
