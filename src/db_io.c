@@ -19,6 +19,8 @@
  * Routines for use by non-DB modules with persistent state stored in the DB
  *****************************************************************************/
 
+#include <string.h>
+
 #include "my-ctype.h"
 #include <float.h>
 #include "my-stdarg.h"
@@ -435,7 +437,7 @@ dbio_write_forked_program(Program * program, int f_index)
 
 char rcsid_db_io[] = "$Id: db_io.c,v 1.4 2009/03/08 12:41:31 blacklite Exp $";
 
-/* 
+/*
  * $Log: db_io.c,v $
  * Revision 1.4  2009/03/08 12:41:31  blacklite
  * Added HASH data type, yield keyword, MEMORY_TRACE, vfscanf(),

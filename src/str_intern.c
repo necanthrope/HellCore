@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "my-stdlib.h"
 
 #include "log.h"

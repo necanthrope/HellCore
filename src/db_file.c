@@ -23,6 +23,8 @@
 #include "my-stdio.h"
 #include "my-stdlib.h"
 
+#include <string.h>
+
 #include "config.h"
 #include "db.h"
 #include "db_io.h"
@@ -200,7 +202,7 @@ write_object(Objid oid)
     dbio_write_objid(o->parent);
     dbio_write_objid(o->child);
     dbio_write_objid(o->sibling);
-    
+
 
     for (v = o->verbdefs, nverbdefs = 0; v; v = v->next)
 	nverbdefs++;
@@ -285,7 +287,7 @@ validate_hierarchies()
     oklog("EMERGENCY REBUILD PHASE 1: Removing old contents and child lists ...\n");
     for (oid = 0, log_oid = PROGRESS_INTERVAL; oid < size; oid++) {
         Object *o = dbpriv_find_object(oid);
-        
+
         MAYBE_LOG_PROGRESS;
         if (o) {
            o->contents = NOTHING;
@@ -302,14 +304,14 @@ validate_hierarchies()
         MAYBE_LOG_PROGRESS;
         if (o) {
             /* find this obj's parent & loc */
-         
+
             Objid parent = o->parent;
             Objid location = o->location;
 
             if (parent != NOTHING) {
               Object *po = dbpriv_find_object(parent);
               Objid lastchild = po->lastchild;
-              
+
               if (lastchild != NOTHING) {
                  Object *co = dbpriv_find_object(lastchild);
 
@@ -321,7 +323,7 @@ validate_hierarchies()
                  po->lastchild = oid;
               }
            }
-        
+
             if (location != NOTHING) {
               Object *lo = dbpriv_find_object(location);
               Objid lastcontents = lo->lastcontents;
@@ -337,10 +339,10 @@ validate_hierarchies()
                  lo->lastcontents = oid;
               }
            }
-         
+
         } /* endif o */
-    } /* for oid */              
-    } /* recovery_mode */ 
+    } /* for oid */
+    } /* recovery_mode */
 
     oklog("VALIDATE: Phase 2: Check for cycles ...\n");
     for (oid = 0, log_oid = PROGRESS_INTERVAL; oid < size; oid++) {
@@ -759,7 +761,7 @@ db_shutdown()
 
 char rcsid_db_file[] = "$Id: db_file.c,v 1.8 2009/03/08 12:41:31 blacklite Exp $";
 
-/* 
+/*
  * $Log: db_file.c,v $
  * Revision 1.8  2009/03/08 12:41:31  blacklite
  * Added HASH data type, yield keyword, MEMORY_TRACE, vfscanf(),
@@ -767,8 +769,8 @@ char rcsid_db_file[] = "$Id: db_file.c,v 1.8 2009/03/08 12:41:31 blacklite Exp $
  * support for str_intern.c, etc. See ChangeLog.txt.
  *
  * Revision 1.7  2008/08/24 07:57:05  blacklite
- * massive speedup to rebuild, which in itself demonstrates how great it is 
- * to have a lastcontents/lastchild pointer. rebuild phase 2 now takes <1 sec, 
+ * massive speedup to rebuild, which in itself demonstrates how great it is
+ * to have a lastcontents/lastchild pointer. rebuild phase 2 now takes <1 sec,
  * down from ~18 minutes. :o
  *
  * Revision 1.6  2008/08/24 05:06:13  blacklite

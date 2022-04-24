@@ -15,6 +15,8 @@
     Pavel@Xerox.Com
  *****************************************************************************/
 
+#include <string.h>
+
 #include "my-stdarg.h"
 
 #include "bf_register.h"
@@ -459,7 +461,7 @@ register_functions(void)
 
 char rcsid_functions[] = "$Id: functions.c,v 1.4 2009/03/08 12:41:31 blacklite Exp $";
 
-/* 
+/*
  * $Log: functions.c,v $
  * Revision 1.4  2009/03/08 12:41:31  blacklite
  * Added HASH data type, yield keyword, MEMORY_TRACE, vfscanf(),
@@ -474,7 +476,7 @@ char rcsid_functions[] = "$Id: functions.c,v 1.4 2009/03/08 12:41:31 blacklite E
  *
  * Revision 1.4  1997/07/07 03:24:54  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
- * 
+ *
  * Revision 1.3.2.2  1997/05/12 04:03:21  bjj
  * This time for sure!
  *
