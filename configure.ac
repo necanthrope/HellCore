@@ -15,7 +15,7 @@ AC_PREREQ([2.64])
 AC_INIT([HellCore],
         [1.10.4],
         [https://github.com/necanthrope/HellCore],
-        ,
+        [],
         [https://github.com/necanthrope/HellCore])
 
 
