@@ -468,18 +468,43 @@ binary_to_raw_bytes(const char *binary, int *buflen)
        unsigned char c = *ptr++;
        if (c == '~')
          {
-                 if ((x = *ptr++) == '~')
+                 if (!(x = *ptr++))
+                 {
+                     /* x is NUL, so the tilde was the end of the string. */
+                     stream_add_char(s, c);
+
+                     /*
+                      * Rewind ptr a character so it's pointing at x.
+                      * This way we *know* it's pointing at a NUL, and the while
+                      * loop will break.
+                      */
+                     ptr--;
+                 }
+                 else if (x == '~')
                  {
                      /* an escaped tilde */
                      stream_add_char(s, c);
                  }
-                 else  if ((y = *ptr++) == '~')
+                 else if (!(y = *ptr++))
+                 {
+                     /* The string ended with ~x, since y is NUL. */
+                     stream_add_char(s, c);
+                     stream_add_char(s, x);
+
+                     /*
+                      * Rewind ptr a character so it's pointing at y.
+                      * This way we *know* it's pointing at a NUL, and the while
+                      * loop will break.
+                      */
+                     ptr--;
+                 }
+                 else if (y == '~')
                  {
                      /* doh, we have to jump back, since we need to
                         re-evaluate from the beginning on the new tilde */
                      stream_add_char(s, c);
                      stream_add_char(s, x);
-                     *ptr--;
+                     ptr--;
                  }
                  else
                  {

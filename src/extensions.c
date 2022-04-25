@@ -32,9 +32,11 @@
 
 #define EXAMPLE 0
 
+#include <stdint.h>
+
 // Signed variables are for wimps
-#define uchar unsigned char // 8-bit byte
-#define ulint unsigned long // 32-bit word
+#define uchar uint8_t // 8-bit byte
+#define ulint uint32_t // 32-bit word
 
 // DBL_INT_ADD treats two unsigned ints a and b as one 64-bit integer and adds c to it
 #define DBL_INT_ADD(a,b,c) if (a > 0xffffffff - (c)) ++b; a += c;
@@ -51,7 +53,10 @@
 #include "bf_register.h"
 #include "functions.h"
 #include "db_tune.h"
+#include "storage.h"
+#include <sys/time.h>
 #include <stdio.h>
+#include <string.h>
 
 typedef struct {
    uchar data[64];
@@ -128,9 +133,9 @@ void sha256_init(SHA256_CTX *ctx)
    ctx->state[7] = 0x5be0cd19;
 }
 
-void sha256_update(SHA256_CTX *ctx, uchar data[], ulint len)
+void sha256_update(SHA256_CTX *ctx, const char data[], ulint len)
 {
-   ulint t,i;
+   ulint i;
 
    for (i=0; i < len; ++i) {
       ctx->data[ctx->datalen] = data[i];

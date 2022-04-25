@@ -92,7 +92,7 @@ typedef struct Object {
  */
 
 #ifdef RONG
-#define db_priv_affected_callable_verb_lookup() (db_verb_generation++)  
+#define db_priv_affected_callable_verb_lookup() (db_verb_generation++)
                                  /* The choice of a new generation. */
 extern unsigned int db_verb_generation;
 #endif
@@ -100,7 +100,7 @@ extern unsigned int db_verb_generation;
 extern void db_priv_affected_callable_verb_lookup(void);
 
 #else /* no cache */
-#define db_priv_affected_callable_verb_lookup() 
+#define db_priv_affected_callable_verb_lookup()
 #endif
 
 /*********** Objects ***********/
@@ -166,9 +166,9 @@ extern Exception dbpriv_dbio_failed;
 extern void dbpriv_set_dbio_input(FILE *);
 extern void dbpriv_set_dbio_output(FILE *);
 
-#endif DB_PRIVATE_h
+#endif /* DB_PRIVATE_h */
 
-/* 
+/*
  * $Log: db_private.h,v $
  * Revision 1.4  2008/08/22 22:09:20  blacklite
  * Add lastchild and lastcontents to make linked lists both undumb and fast.

@@ -166,7 +166,7 @@ db_match_prep(const char *prepname)
 	else
 	    return prep;
     }
-    if ((ptr = strchr(s, '/')) != '\0')
+    if ((ptr = strchr(s, '/')) != NULL)
 	*ptr = '\0';
 
     argv = parse_into_words(s, &argc);
@@ -758,7 +758,7 @@ db_verb_allows(db_verb_handle h, Objid progr, db_verb_flag flag)
 
 char rcsid_db_verbs[] = "$Id: db_verbs.c,v 1.3 2007/09/12 07:33:29 spunky Exp $";
 
-/* 
+/*
  * $Log: db_verbs.c,v $
  * Revision 1.3  2007/09/12 07:33:29  spunky
  * This is a working version of the current HellMOO server
@@ -769,7 +769,7 @@ char rcsid_db_verbs[] = "$Id: db_verbs.c,v 1.3 2007/09/12 07:33:29 spunky Exp $"
  * Revision 1.4  1997/09/07 23:58:37  nop
  * Bump up cache size to 7507, since lambdamoo has been running with that
  * for months.
- * 
+ *
  * Revision 1.3  1997/07/07 03:24:53  nop
  * Merge UNSAFE_OPTS (r5) after extensive testing.
  *

@@ -15,6 +15,8 @@
 	Pavel@Xerox.Com
  *****************************************************************************/
 
+#include <string.h>
+
 #include "my-stdlib.h"
 
 #include "config.h"
@@ -61,7 +63,7 @@ static char* Memory_Type_Names[Sizeof_Memory_Type] =
 
 	"REF_ENTRY", "REF_TABLE", "VC_ENTRY", "VC_TABLE", "STRING_PTRS",
 	"INTERN_POINTER", "INTERN_ENTRY", "INTERN_HUNK",
-	
+
 	"HASH"
 };
 
@@ -81,7 +83,7 @@ refcount_overhead(Memory_Type type)
 	 * As long as we're living on the wild side, avoid getting the
 	 * refcount slot for allocations that won't need it.
 	 *
-	 * Lists get two because we allocate more than requested, 
+	 * Lists get two because we allocate more than requested,
 	 * to make list expansion faster.
 	 */
 	switch (type) {
@@ -113,7 +115,7 @@ track_mem(void* p, Memory_Type t, size_t sz)
 	if (t != MEMORY_TRACE_TYPE)
 		return;
 #endif
-			
+
 	if (last_mr == 0) {
 		first_mr = malloc(sizeof(Memrecord));
 		last_mr = first_mr;
@@ -140,7 +142,7 @@ static inline void
 find_mem(void *p)
 {
 	Memrecord *m;
-	
+
 	for (m = first_mr; m; m = m->next) {
 		if (m->mem == p) {
 			now_reallocing = m;
@@ -167,7 +169,7 @@ update_mem(void *newp, int newsz)
 	m->touches += 1;
 	if (live_trace >= 2)
 		print_memdump(m, "REALLOC ", live_trace == 3, 0);
-	
+
 	now_reallocing = 0;
 }
 
@@ -175,7 +177,7 @@ static inline void
 print_memdump(Memrecord *m, const char *prefix, int detail, int print_value)
 {
 	int i;
-	
+
 	oklog("--- %s: %5d bytes (%s %4d) at %p -- refs %2d\n",
 	  prefix, m->size, Memory_Type_Names[m->type], m->id,
 	  m->mem,
@@ -212,11 +214,11 @@ extern int
 record_ref(void *ptr, int change)
 {
 	Memrecord *m;
-	
+
 	for (m = first_mr; m; m = m->next) {
 		if (m->mem == ptr) {
 			free(m->alloc_bt);
-			
+
 			m->bt_size  = backtrace(bt_buffer, BACKTRACE_MAX);
 			m->alloc_bt = backtrace_symbols(bt_buffer, m->bt_size);
 			m->touches += 1;
@@ -234,7 +236,7 @@ record_ref(void *ptr, int change)
 		}
 	}
 
-	/* found nothing */		
+	/* found nothing */
 	/* could abort() */
 	return 0;
 }
@@ -269,8 +271,8 @@ untrack_mem(void *p)
 				first_mr   = m->next;
 			if (m == last_mr)
 				last_mr	   = prev;
-		
-			if (live_trace >= 2)	
+
+			if (live_trace >= 2)
 				print_memdump(m, "FREE    ", live_trace == 3, 0);
 			free(m->alloc_bt);
 			free(m);
@@ -278,7 +280,7 @@ untrack_mem(void *p)
 		}
 	}
 
-	/* found nothing */		
+	/* found nothing */
 	/* could abort() */
 }
 
@@ -287,7 +289,7 @@ verify_mem()
 {
 	Memrecord *m;
 	int offs, i;
-	
+
 	oklog("--- MEMCHECK ---\n");
 	for (m = first_mr; m; m = m->next) {
 		if (!m->freed)
@@ -303,7 +305,7 @@ verify_mem()
 #define trackfree_mem(x)
 #define untrack_mem(x)
 
-#endif 
+#endif
 
 
 void *
@@ -375,7 +377,7 @@ myrealloc(void *ptr, unsigned size, Memory_Type type)
 	}
 
 	ptr = (void*)((char*)ptr + offs);
-	
+
 	update_mem(ptr, size);
 
 	return ptr;
@@ -387,7 +389,7 @@ myfree(void *ptr, Memory_Type type)
 	if (!ptr) {
 		panic("Got null pointer in myfree");
 	}
-		
+
 	alloc_num[type]--;
 
 #ifdef FAKE_FREE
@@ -409,14 +411,14 @@ memory_usage(void)
 	/* We want to return {totalitems, each item, ...} */
 	r = new_list(Sizeof_Memory_Type + 1);
 	total_alloc = 0;
-	
+
 	/* do the individual items first, starting from index 3. */
 	for (i = 0; i < Sizeof_Memory_Type; i++) {
 		r.v.list[i+2].type = TYPE_INT;
 		r.v.list[i+2].v.num = alloc_num[i];
 		total_alloc += alloc_num[i];
 	}
-	
+
 	r.v.list[1].type = TYPE_INT;
 	r.v.list[1].v.num = total_alloc;
 
@@ -432,7 +434,7 @@ int set_live_trace(int live_trace_on)
 
 char rcsid_storage[] = "$Id: storage.c,v 1.9 2009/09/29 20:44:32 blacklite Exp $";
 
-/* 
+/*
  * $Log: storage.c,v $
  * Revision 1.9  2009/09/29 20:44:32  blacklite
  * Add new trackfree_mem null macro, and change an abort to panic.

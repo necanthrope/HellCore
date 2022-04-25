@@ -3,6 +3,9 @@
 # Ignore all compiled object files.
 *.o
 
+# Ignore temporary and backup files.
+*~
+
 # Ignore the files generated or added automatically by the build system.
 .deps/
 Makefile
@@ -16,7 +19,11 @@ configure
 depcomp
 install-sh
 missing
+stamp-h1
 ylwrap
 
 # Ignore the generated tree tarballs.
 hellcore-*.tar.*
+
+# Ignore logs created when running the MOO.
+*.log
